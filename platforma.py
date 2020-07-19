@@ -24,7 +24,7 @@ PARAMS = {
 }
 
 SITE_PREFIX = "https://platformaopon.pl/buy/offers?"
-SITE_SUFFIX = "SaleOfferTyreFilterForm%5Bsearch%5D="
+SITE_SUFFIX = "SaleOfferTyreFilterForm%5BisDemo%5D=0&SaleOfferTyreFilterForm%5BisRetreaded%5D=0&SaleOfferTyreFilterForm%5Bsearch%5D="
 
 BUY_SITE = [
     "SaleOfferTyreFilterForm%5Bsale_offer%5D%5Bproducer%5D%5BpersonalizedProducersList%5D=",
@@ -33,12 +33,13 @@ BUY_SITE = [
     "SaleOfferTyreFilterForm%5BtyreParameters%5D%5Bspeed%5D=",
     "SaleOfferTyreFilterForm%5BtyreParameters%5D%5Bcapacity%5D=",
     "SaleOfferTyreFilterForm%5Bsale_offer%5D%5Bname%5D=",
+    "SaleOfferTyreFilterForm%5Bsale_offer%5D%5Bamount%5D%5Bmin%5D=20&",
 ]
 
 
 SIZES = [
-    ["Hankook", "195/65R15", "zima", "T", "91", "W452", ],
-    ["Hankook", "205/55R16", "zima", "T", "91", "W452", ],
+    ["Hankook", "195/65R15", "zima", "T", "91", "W452", "20",],
+    ["Hankook", "205/55R16", "zima", "T", "91", "W452", "20",],
 ]
 
 
