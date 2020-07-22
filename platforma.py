@@ -1,4 +1,5 @@
 from time import sleep
+from datetime import date
 from selenium import webdriver
 from selenium.common.exceptions import NoSuchElementException
 import pandas
@@ -111,6 +112,7 @@ for size in sizes:
             stock,
             dot,
             remarks,
+            date.today(),
         ])
     sleep(8)
 
@@ -119,17 +121,19 @@ driver.find_element_by_xpath("//a[contains(@title, 'Wyloguj')]").click()
 driver.close()
 
 df = pandas.DataFrame(results,
-                 columns=[
-                     "size",
-                     "pattern",
-                     "seller",
-                     "price",
-                     "stock",
-                     "dot",
-                     "remarks",
-                 ])
+                      columns = [
+                          "size",
+                          "pattern",
+                          "seller",
+                          "price",
+                          "stock",
+                          "dot",
+                          "remarks",
+                          "date",
+                      ],
+                      )
 
-df.to_excel("data.xlsx")
+df.to_excel("data.xlsx", index=False)
 
 
 
