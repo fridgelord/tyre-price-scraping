@@ -7,7 +7,7 @@ import pandas
 
 LOGIN_SITE = "https://platformaopon.pl/"
 CREDENTIALS_FILE = "credentials.txt"
-SIZES_FILE = "sizes.csv"
+SIZES_FILE = "sizes.xlsx"
 
 PARAMS = {
     "hankook": "52",
@@ -54,7 +54,8 @@ with open(CREDENTIALS_FILE) as fp:
 
 try:
     with open(SIZES_FILE) as fp:
-        sizes = [line.split(";") for line in fp.read().splitlines()[1:]]
+        temp_df = pandas.read_excel(SIZES_FILE, dtype="str")
+        sizes = temp_df.to_numpy().tolist()
 except FileNotFoundError:
     sizes = DEFAULT_SIZES
 
@@ -116,7 +117,6 @@ for size in sizes:
         ])
     sleep(8)
 
-print(results)
 driver.find_element_by_xpath("//a[contains(@title, 'Wyloguj')]").click()
 driver.close()
 
