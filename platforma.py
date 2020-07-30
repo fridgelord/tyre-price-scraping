@@ -41,8 +41,8 @@ BUY_SITE = [
 
 
 DEFAULT_SIZES = [
-    ["Hankook", "195/65R15", "zima", "91", "T", "W452", "20",],
-    ["Hankook", "205/55R16", "zima", "91", "T", "W452", "20",],
+    ["Hankook", "195/65R15", "zima", "91", "T", "W452", "20", 2019],
+    ["Hankook", "205/55R16", "zima", "91", "T", "W452", "20", 2019],
 ]
 
 
@@ -55,9 +55,19 @@ with open(CREDENTIALS_FILE) as fp:
 try:
     with open(SIZES_FILE) as fp:
         temp_df = pandas.read_excel(SIZES_FILE, dtype="str")
+        temp_df["min_dot"] = temp_df["min_dot"].astype(int)
         sizes = temp_df.to_numpy().tolist()
 except FileNotFoundError:
     sizes = DEFAULT_SIZES
+
+
+def is_old_dot(dot, min_dot):
+    year = dot[-4:]
+    try:
+        return int(year) < min_dot
+    except ValueError:
+        return False
+
 
 username_field = driver.find_element_by_xpath("//input[contains(@id, 'username')]")
 password_field = driver.find_element_by_xpath("//input[contains(@id, 'password')]")
@@ -73,7 +83,7 @@ sleep(4)
 results = []
 for size in sizes:
     site = ""
-    for key, item in enumerate(size):
+    for key, item in enumerate(size[:-1]):
         if key != 1:
             item = item.lower().replace("/", "%2F")
         site += BUY_SITE[key] + PARAMS.get(item, item) + "&"
@@ -84,7 +94,7 @@ for size in sizes:
     offers = driver.find_elements_by_xpath("//tbody/tr")
     for offer in offers:
         try:
-            size = offer.find_element_by_xpath(".//td[contains(@class, 'tyre-size')]").text
+            dimension = offer.find_element_by_xpath(".//td[contains(@class, 'tyre-size')]").text
         except NoSuchElementException:
             continue
         pattern = offer.find_element_by_xpath(".//span[contains(@class, 'model-name')]").text
@@ -100,13 +110,15 @@ for size in sizes:
             dot = offer.find_element_by_xpath(".//div[contains(@class, 'tyre-year')]").text
         except NoSuchElementException:
             dot = ""
+        if is_old_dot(dot, size[-1]):
+            continue
         try:
             remarks = offer.find_element_by_xpath(".//div[contains(@class, 'description')]").text
         except NoSuchElementException:
             remarks = ""
 
         results.append([
-            size,
+            dimension,
             pattern,
             seller,
             price,
