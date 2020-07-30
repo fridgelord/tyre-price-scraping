@@ -46,6 +46,7 @@ DEFAULT_SIZES = [
 ]
 
 
+today = date.today()
 driver = webdriver.Firefox()
 driver.get(LOGIN_SITE)
 
@@ -92,6 +93,7 @@ for size in sizes:
 
 
     offers = driver.find_elements_by_xpath("//tbody/tr")
+    i = 0
     for offer in offers:
         try:
             dimension = offer.find_element_by_xpath(".//td[contains(@class, 'tyre-size')]").text
@@ -106,6 +108,7 @@ for size in sizes:
         except NoSuchElementException:
             seller = offer.find_element_by_xpath(".//div[contains(@class, 'company-table-row__name')]").text
         delivery = offer.find_element_by_xpath(".//div[contains(@class, 'delivery-time delivery-time-info')]").text
+        delivery = delivery[9:]
         try:
             dot = offer.find_element_by_xpath(".//div[contains(@class, 'tyre-year')]").text
         except NoSuchElementException:
@@ -117,6 +120,9 @@ for size in sizes:
         except NoSuchElementException:
             remarks = ""
 
+        if i > 9:
+            break # need only 10 records with proper DOT
+        i += 1
         results.append([
             dimension,
             pattern,
@@ -125,7 +131,8 @@ for size in sizes:
             stock,
             dot,
             remarks,
-            date.today(),
+            delivery,
+            today,
         ])
     sleep(8)
 
@@ -141,6 +148,7 @@ df = pandas.DataFrame(results,
                           "stock",
                           "dot",
                           "remarks",
+                          "delivery",
                           "date",
                       ],
                       )
