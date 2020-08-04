@@ -3,6 +3,7 @@ from datetime import date
 from selenium import webdriver
 from selenium.common.exceptions import NoSuchElementException
 import pandas
+from DataFrameAppend import *
 
 
 LOGIN_SITE = "https://platformaopon.pl/"
@@ -36,7 +37,7 @@ BUY_SITE = [
     "SaleOfferTyreFilterForm%5BtyreParameters%5D%5Bcapacity%5D=",
     "SaleOfferTyreFilterForm%5BtyreParameters%5D%5Bspeed%5D=",
     "SaleOfferTyreFilterForm%5Bsale_offer%5D%5Bname%5D=",
-    "SaleOfferTyreFilterForm%5Bsale_offer%5D%5Bamount%5D%5Bmin%5D=20&",
+    "SaleOfferTyreFilterForm%5Bsale_offer%5D%5Bamount%5D%5Bmin%5D=",
 ]
 
 
@@ -84,7 +85,7 @@ sleep(4)
 results = []
 for size in sizes:
     site = ""
-    for key, item in enumerate(size[:-1]):
+    for key, item in enumerate(size[:7]):
         if key != 1:
             item = item.lower().replace("/", "%2F")
         site += BUY_SITE[key] + PARAMS.get(item, item) + "&"
@@ -113,7 +114,7 @@ for size in sizes:
             dot = offer.find_element_by_xpath(".//div[contains(@class, 'tyre-year')]").text
         except NoSuchElementException:
             dot = ""
-        if is_old_dot(dot, size[-1]):
+        if is_old_dot(dot, size[7]):
             continue
         try:
             remarks = offer.find_element_by_xpath(".//div[contains(@class, 'description')]").text
@@ -139,7 +140,7 @@ for size in sizes:
 driver.find_element_by_xpath("//a[contains(@title, 'Wyloguj')]").click()
 driver.close()
 
-df = pandas.DataFrame(results,
+df = DataFrameAppend(results,
                       columns = [
                           "size",
                           "pattern",
@@ -153,7 +154,7 @@ df = pandas.DataFrame(results,
                       ],
                       )
 
-df.to_excel("data.xlsx", index=False)
+df.append_to_excel("data.xlsx", index=False)
 
 
 
