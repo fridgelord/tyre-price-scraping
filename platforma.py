@@ -10,8 +10,11 @@ LOGIN_SITE = "https://platformaopon.pl/"
 CREDENTIALS_FILE = "credentials.txt"
 SIZES_FILE = "sizes.xlsx"
 
-PARAMS = {
+PARAMS_BRAND = {
     "hankook": "52",
+}
+
+PARAMS_SEASON = {
     "lato": "1",
     "zima": "2",
     "całoroczne": "3",
@@ -20,6 +23,10 @@ PARAMS = {
     "winter": "2",
     "all-season": "3",
     "all-weather": "3",
+}
+
+PARAMS_SI = {
+    "r": "22",
     "t": "24",
     "h": "26",
     "v": "27",
@@ -86,9 +93,16 @@ results = []
 for size in sizes:
     site = ""
     for key, item in enumerate(size[:7]):
+        # how ugly :((
         if key != 1:
             item = item.lower().replace("/", "%2F")
-        site += BUY_SITE[key] + PARAMS.get(item, item) + "&"
+        if key == 0:
+            item = PARAMS_BRAND[item.lower()]
+        if key == 2:
+            item = PARAMS_SEASON[item.lower()]
+        if key == 4:
+            item = PARAMS_SI[item.lower()]
+        site += BUY_SITE[key] + item + "&"
     final_site = SITE_PREFIX + site + SITE_SUFFIX
     driver.get(final_site)
 
