@@ -12,6 +12,7 @@ SIZES_FILE = "sizes.xlsx"
 
 PARAMS_BRAND = {
     "hankook": "52",
+    "laufenn": "18945",
 }
 
 PARAMS_SEASON = {
@@ -115,6 +116,7 @@ for size in sizes:
         except NoSuchElementException:
             continue
         pattern = offer.find_element_by_xpath(".//span[contains(@class, 'model-name')]").text
+        brand = offer.find_element_by_xpath(".//span[contains(@class, 'producer-name')]").text
         stock = offer.find_element_by_xpath(".//span[contains(@class, 'value')]").text
         price_str = offer.find_element_by_xpath(".//div[contains(@class, 'big-price')]").text
         price = float(price_str.replace(" zł", "").replace(",","."))
@@ -148,6 +150,7 @@ for size in sizes:
             remarks,
             delivery,
             today,
+            brand,
         ])
     sleep(8)
 
@@ -165,6 +168,7 @@ df = DataFrameAppend(results,
                           "remarks",
                           "delivery",
                           "date",
+                          "brand",
                       ],
                       )
 
