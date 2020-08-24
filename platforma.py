@@ -117,7 +117,10 @@ def collect_data(size):
     driver.get(site)
 
     offers = driver.find_elements_by_xpath("//tbody/tr")
-    for offer in offers[:9]:
+    i = 0
+    for offer in offers:
+        if i > 9:
+            break #only need 10 resutls with proper DOT
         try:
             dimension = offer.find_element_by_xpath(".//td[contains(@class, 'tyre-size')]").text
         except NoSuchElementException:
@@ -144,6 +147,7 @@ def collect_data(size):
         except NoSuchElementException:
             remarks = ""
 
+        i += 1
         results.append([
             dimension,
             pattern,
