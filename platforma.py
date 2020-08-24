@@ -53,11 +53,11 @@ DEFAULT_SIZES = [
     {
     "brand": "Hankook",
     "size": "195/65R15",
-    "season": "zima",
-    "LI": "91",
-    "SI": "T",
-    "pattern": "W452",
-    "min_qt": "20",
+    "season(zima,lato,wielosezon)": "zima",
+    "indeks nosnosci": "91",
+    "indeks predkosci": "T",
+    "bieznik(nieobowiazkowy)": "W452",
+    "min. sztuk": "20",
     "min_dot": 2019,
     "type": "PCR",
     },
@@ -75,7 +75,7 @@ try:
     with open(SIZES_FILE) as fp:
         temp_df = pandas.read_excel(SIZES_FILE, dtype="str")
         temp_df["min_dot"] = temp_df["min_dot"].astype(int)
-        sizes = temp_df.to_numpy().tolist()
+        sizes = temp_df.to_dict("records")
 except FileNotFoundError:
     sizes = DEFAULT_SIZES
 
@@ -106,11 +106,11 @@ def collect_data(size):
     site = (SITE_PREFIX +
         BUY_SITE["brand"] + PARAMS_BRAND[size["brand"].lower()] + "&" +
         BUY_SITE["size"] + size["size"].replace("/", "%2F") + "&" +
-        BUY_SITE["season"] + PARAMS_SEASON[size["season"].lower()] + "&" +
-        BUY_SITE["LI"] + size["LI"] + "&" +
-        BUY_SITE["SI"] + PARAMS_SI[size["SI"].lower()] + "&" +
-        BUY_SITE["pattern"] + size["pattern"] + "&" +
-        BUY_SITE["min_qt"] + size["min_qt"] + "&" +
+        BUY_SITE["season"] + PARAMS_SEASON[size["season(zima,lato,wielosezon)"].lower()] + "&" +
+        BUY_SITE["LI"] + size["indeks nosnosci"] + "&" +
+        BUY_SITE["SI"] + PARAMS_SI[size["indeks predkosci"].lower()] + "&" +
+        BUY_SITE["pattern"] + size["bieznik(nieobowiazkowy)"] + "&" +
+        BUY_SITE["min_qt"] + size["min. sztuk"] + "&" +
         SITE_SUFFIX
             )
 
@@ -160,7 +160,7 @@ def collect_data(size):
             today,
             brand,
             size["type"],
-            size["season"],
+            size["season(zima,lato,wielosezon)"],
         ])
     sleep(8)
     return(results)
