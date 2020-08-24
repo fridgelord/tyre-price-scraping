@@ -38,20 +38,29 @@ PARAMS_SI = {
 SITE_PREFIX = "https://platformaopon.pl/buy/offers?"
 SITE_SUFFIX = "SaleOfferTyreFilterForm%5BisDemo%5D=0&SaleOfferTyreFilterForm%5BisRetreaded%5D=0&SaleOfferTyreFilterForm%5Bsearch%5D="
 
-BUY_SITE = [
-    "SaleOfferTyreFilterForm%5Bsale_offer%5D%5Bproducer%5D%5BpersonalizedProducersList%5D=",
-    "SaleOfferTyreFilterForm%5BtyreParameters%5D%5Bsize%5D=",
-    "SaleOfferTyreFilterForm%5BtyreParameters%5D%5Bseason%5D=",
-    "SaleOfferTyreFilterForm%5BtyreParameters%5D%5Bcapacity%5D=",
-    "SaleOfferTyreFilterForm%5BtyreParameters%5D%5Bspeed%5D=",
-    "SaleOfferTyreFilterForm%5Bsale_offer%5D%5Bname%5D=",
-    "SaleOfferTyreFilterForm%5Bsale_offer%5D%5Bamount%5D%5Bmin%5D=",
-]
+BUY_SITE = {
+    "brand": "SaleOfferTyreFilterForm%5Bsale_offer%5D%5Bproducer%5D%5BpersonalizedProducersList%5D=",
+    "size": "SaleOfferTyreFilterForm%5BtyreParameters%5D%5Bsize%5D=",
+    "season": "SaleOfferTyreFilterForm%5BtyreParameters%5D%5Bseason%5D=",
+    "LI": "SaleOfferTyreFilterForm%5BtyreParameters%5D%5Bcapacity%5D=",
+    "SI": "SaleOfferTyreFilterForm%5BtyreParameters%5D%5Bspeed%5D=",
+    "pattern": "SaleOfferTyreFilterForm%5Bsale_offer%5D%5Bname%5D=",
+    "min_qt": "SaleOfferTyreFilterForm%5Bsale_offer%5D%5Bamount%5D%5Bmin%5D=",
+}
 
 
 DEFAULT_SIZES = [
-    ["Hankook", "195/65R15", "zima", "91", "T", "W452", "20", 2019],
-    ["Hankook", "205/55R16", "zima", "91", "T", "W452", "20", 2019],
+    {
+    "brand": "Hankook",
+    "size": "195/65R15",
+    "season": "zima",
+    "LI": "91",
+    "SI": "T",
+    "pattern": "W452",
+    "min_qt": "20",
+    "min_dot": 2019,
+    "type": "PCR",
+    },
 ]
 
 
@@ -90,27 +99,25 @@ save_me_tick.click()
 submit_field.click()
 sleep(4)
 
-results = []
-for size in sizes:
-    site = ""
-    for key, item in enumerate(size[:7]):
-        # how ugly :((
-        if key != 1:
-            item = item.lower().replace("/", "%2F")
-        if key == 0:
-            item = PARAMS_BRAND[item.lower()]
-        if key == 2:
-            item = PARAMS_SEASON[item.lower()]
-        if key == 4:
-            item = PARAMS_SI[item.lower()]
-        site += BUY_SITE[key] + item + "&"
-    final_site = SITE_PREFIX + site + SITE_SUFFIX
-    driver.get(final_site)
 
+
+def collect_data(size):
+    results = []
+    site = (SITE_PREFIX +
+        BUY_SITE["brand"] + PARAMS_BRAND[size["brand"].lower()] + "&" +
+        BUY_SITE["size"] + size["size"].replace("/", "%2F") + "&" +
+        BUY_SITE["season"] + PARAMS_SEASON[size["season"].lower()] + "&" +
+        BUY_SITE["LI"] + size["LI"] + "&" +
+        BUY_SITE["SI"] + PARAMS_SI[size["SI"].lower()] + "&" +
+        BUY_SITE["pattern"] + size["pattern"] + "&" +
+        BUY_SITE["min_qt"] + size["min_qt"] + "&" +
+        SITE_SUFFIX
+            )
+
+    driver.get(site)
 
     offers = driver.find_elements_by_xpath("//tbody/tr")
-    i = 0
-    for offer in offers:
+    for offer in offers[:9]:
         try:
             dimension = offer.find_element_by_xpath(".//td[contains(@class, 'tyre-size')]").text
         except NoSuchElementException:
@@ -130,16 +137,13 @@ for size in sizes:
             dot = offer.find_element_by_xpath(".//div[contains(@class, 'tyre-year')]").text
         except NoSuchElementException:
             dot = ""
-        if is_old_dot(dot, size[7]):
+        if is_old_dot(dot, size["min_dot"]):
             continue
         try:
             remarks = offer.find_element_by_xpath(".//div[contains(@class, 'description')]").text
         except NoSuchElementException:
             remarks = ""
 
-        if i > 9:
-            break # need only 10 records with proper DOT
-        i += 1
         results.append([
             dimension,
             pattern,
@@ -151,30 +155,34 @@ for size in sizes:
             delivery,
             today,
             brand,
+            size["type"],
+            size["season"],
         ])
     sleep(8)
+    return(results)
+
+
+results = []
+for size in sizes:
+    results.extend(collect_data(size))
+
+df = DataFrameAppend(results, columns = [
+    "size",
+    "pattern",
+    "seller",
+    "price",
+    "stock",
+    "dot",
+    "remarks",
+    "delivery",
+    "date",
+    "brand",
+    "type",
+    "season",
+    ],
+)
 
 driver.find_element_by_xpath("//a[contains(@title, 'Wyloguj')]").click()
 driver.close()
 
-df = DataFrameAppend(results,
-                      columns = [
-                          "size",
-                          "pattern",
-                          "seller",
-                          "price",
-                          "stock",
-                          "dot",
-                          "remarks",
-                          "delivery",
-                          "date",
-                          "brand",
-                      ],
-                      )
-
 df.append_to_excel("data.xlsx", index=False)
-
-
-
-
-
