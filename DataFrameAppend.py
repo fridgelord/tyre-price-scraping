@@ -36,6 +36,8 @@ class DataFrameAppend(pandas.DataFrame):
         if 'header' in to_excel_kwargs:
             header = to_excel_kwargs['header']
             to_excel_kwargs.pop('header')
+        else:
+            header = True
 
         with pandas.ExcelWriter(filename, engine='openpyxl') as writer:
             try:
