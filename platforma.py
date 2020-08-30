@@ -24,6 +24,7 @@ PARAMS_SEASON = {
     "winter": "2",
     "all-season": "3",
     "all-weather": "3",
+    "": "",
 }
 
 PARAMS_SI = {
@@ -33,6 +34,7 @@ PARAMS_SI = {
     "v": "27",
     "w": "28",
     "y": "29",
+    "": "",
 }
 
 SITE_PREFIX = "https://platformaopon.pl/buy/offers?"
@@ -75,7 +77,7 @@ try:
     with open(SIZES_FILE) as fp:
         temp_df = pandas.read_excel(SIZES_FILE, dtype="str")
         temp_df["min_dot"] = temp_df["min_dot"].astype(int)
-        sizes = temp_df.to_numpy().tolist()
+        sizes = temp_df.to_dict("records")
 except FileNotFoundError:
     sizes = DEFAULT_SIZES
 
@@ -102,22 +104,34 @@ sleep(4)
 
 
 def collect_data(size):
-    results = []
+    """Collect information from platformaopon.pl about
+    10 best offers for selected sizes
+
+    arguments: size -> dict with
+    obligatory keys:
+    brand, size, min_qt, type, min_dot
+    optional:
+    season, LI, SI, pattern, min_qt
+
+    returns: list
+    """
     site = (SITE_PREFIX +
         BUY_SITE["brand"] + PARAMS_BRAND[size["brand"].lower()] + "&" +
         BUY_SITE["size"] + size["size"].replace("/", "%2F") + "&" +
-        BUY_SITE["season"] + PARAMS_SEASON[size["season"].lower()] + "&" +
-        BUY_SITE["LI"] + size["LI"] + "&" +
-        BUY_SITE["SI"] + PARAMS_SI[size["SI"].lower()] + "&" +
-        BUY_SITE["pattern"] + size["pattern"] + "&" +
-        BUY_SITE["min_qt"] + size["min_qt"] + "&" +
+        BUY_SITE["season"] + PARAMS_SEASON[size.get("season", "").lower()] + "&" +
+        BUY_SITE["LI"] + size.get("LI", "") + "&" +
+        BUY_SITE["SI"] + PARAMS_SI[size.get("SI", "").lower()] + "&" +
+        BUY_SITE["pattern"] + size.get("pattern", "") + "&" +
+        BUY_SITE["min_qt"] + size.get("min_qt", "") + "&" +
         SITE_SUFFIX
             )
 
     driver.get(site)
 
     offers = driver.find_elements_by_xpath("//tbody/tr")
+
     i = 0
+    results = []
     for offer in offers:
         if i > 9:
             break #only need 10 resutls with proper DOT
@@ -160,7 +174,7 @@ def collect_data(size):
             today,
             brand,
             size["type"],
-            size["season"],
+            size.get("season", ""),
         ])
     sleep(8)
     return(results)
