@@ -55,11 +55,11 @@ DEFAULT_SIZES = [
     {
     "brand": "Hankook",
     "size": "195/65R15",
-    "season": "zima",
-    "LI": "91",
-    "SI": "T",
-    "pattern": "W452",
-    "min_qt": "20",
+    "season(zima,lato,wielosezon)": "zima",
+    "indeks nosnosci": "91",
+    "indeks predkosci": "T",
+    "bieznik(nieobowiazkowy)": "W452",
+    "min. sztuk": "20",
     "min_dot": 2019,
     "type": "PCR",
     },
@@ -118,11 +118,11 @@ def collect_data(size):
     site = (SITE_PREFIX +
         BUY_SITE["brand"] + PARAMS_BRAND[size["brand"].lower()] + "&" +
         BUY_SITE["size"] + size["size"].replace("/", "%2F") + "&" +
-        BUY_SITE["season"] + PARAMS_SEASON[size.get("season", "").lower()] + "&" +
-        BUY_SITE["LI"] + size.get("LI", "") + "&" +
-        BUY_SITE["SI"] + PARAMS_SI[size.get("SI", "").lower()] + "&" +
-        BUY_SITE["pattern"] + size.get("pattern", "") + "&" +
-        BUY_SITE["min_qt"] + size.get("min_qt", "") + "&" +
+        BUY_SITE["season"] + PARAMS_SEASON[size.get("season(zima,lato,wielosezon)", "").lower()] + "&" +
+        BUY_SITE["LI"] + size.get("indeks nosnosci", "") + "&" +
+        BUY_SITE["SI"] + PARAMS_SI[size.get("indeks predkosci", "").lower()] + "&" +
+        BUY_SITE["pattern"] + size.get("bieznik(nieobowiazkowy)", "") + "&" +
+        BUY_SITE["min_qt"] + size.get("min. sztuk", "") + "&" +
         SITE_SUFFIX
             )
 
@@ -174,7 +174,7 @@ def collect_data(size):
             today,
             brand,
             size["type"],
-            size.get("season", ""),
+            size.get("season(zima,lato,wielosezon)", ""),
         ])
     sleep(8)
     return(results)
