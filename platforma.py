@@ -50,7 +50,7 @@ def is_old_dot(dot, min_dot):
         return False
 
 
-def collect_data(size, date):
+def collect_data(size, date, driver):
     """Collect information from platformaopon.pl about
     10 best offers for selected sizes
 

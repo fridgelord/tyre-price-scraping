@@ -1,6 +1,11 @@
 from DataFrameAppend import *
 from datetime import date
 import platforma
+import oponeo
+from selenium import webdriver
+from time import sleep
+
+current_date = date.today()
 
 DEFAULT_SIZES = [
     {
@@ -16,8 +21,7 @@ DEFAULT_SIZES = [
     },
 ]
 
-today = date.today()
-
+SIZES_FILE = "sizes.xlsx"
 try:
     with open(SIZES_FILE) as fp:
         temp_df = pandas.read_excel(SIZES_FILE, dtype="str")
@@ -26,11 +30,8 @@ try:
 except FileNotFoundError:
     sizes = DEFAULT_SIZES
 
-
-
 LOGIN_SITE = "https://platformaopon.pl/"
 CREDENTIALS_FILE = "credentials.txt"
-SIZES_FILE = "sizes.xlsx"
 
 driver = webdriver.Firefox()
 driver.get(LOGIN_SITE)
@@ -51,7 +52,11 @@ sleep(4)
 
 results = []
 for size in sizes:
-    results.extend(platforma.collect_data(size, today))
+    results.extend(platforma.collect_data(size, current_date, driver))
+    if size["type"] == "PCR":
+        oponeo_results = oponeo.collect(size, current_date)
+        if oponeo_results:
+            results.extend(oponeo_results)
 
 driver.find_element_by_xpath("//a[contains(@title, 'Wyloguj')]").click()
 driver.close()
