@@ -32,6 +32,8 @@ def collect(size, date):
     htm = requests.get(site).text
     soup = BeautifulSoup(htm, "html.parser")
     product = soup.find(True, {'class': 'product container'})
+    if not product:
+        return None
     brand = product.find("span", "producer").text
     pattern = product.find("span", "model").text
     dim = product.find("span", "size").text.replace(" ", "")
