@@ -4,6 +4,7 @@ import platforma
 import oponeo
 from selenium import webdriver
 from time import sleep
+import sys
 
 current_date = date.today()
 
@@ -21,10 +22,21 @@ DEFAULT_SIZES = [
     },
 ]
 
-SIZES_FILE = "sizes.xlsx"
+DEFAULT_INPUT = "sizes.xlsx"
+DEFAULT_OUTPUT = "data.xlsx"
+if len(sys.argv) > 1:
+    input_file = sys.argv[1]
+    output_file = sys.argv[2]
+else:
+    input_file = DEFAULT_INPUT
+    output_file = DEFAULT_OUTPUT
+
+
+
 try:
-    with open(SIZES_FILE) as fp:
-        temp_df = pandas.read_excel(SIZES_FILE, dtype="str")
+    with open(input_file) as fp:
+        ## why context manager here????
+        temp_df = pandas.read_excel(input_file, dtype="str")
         temp_df["min_dot"] = temp_df["min_dot"].astype(int)
         sizes = temp_df.to_dict("records")
 except FileNotFoundError:
@@ -77,4 +89,4 @@ df = DataFrameAppend(results, columns = [
     ],
                      )
 
-df.append_to_excel("data.xlsx", index=False)
+df.append_to_excel(output_file, index=False)
