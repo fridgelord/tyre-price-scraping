@@ -1,3 +1,4 @@
+import platform
 from DataFrameAppend import *
 from datetime import date
 import platforma
@@ -45,7 +46,13 @@ except FileNotFoundError:
 LOGIN_SITE = "https://platformaopon.pl/"
 CREDENTIALS_FILE = "credentials.txt"
 
-driver = webdriver.Firefox()
+
+hostname = platform.node()
+firefox_options = webdriver.FirefoxOptions()
+if hostname == 'user-Vostro-260':
+    firefox_options.set_headless()
+
+driver = webdriver.Firefox(firefox_options=firefox_options)
 driver.get(LOGIN_SITE)
 
 with open(CREDENTIALS_FILE) as fp:
