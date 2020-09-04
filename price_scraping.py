@@ -7,6 +7,7 @@ from selenium import webdriver
 from selenium.webdriver.firefox.options import Options
 from time import sleep
 import sys
+import os
 
 current_date = date.today()
 
@@ -45,7 +46,7 @@ except FileNotFoundError:
     sizes = DEFAULT_SIZES
 
 LOGIN_SITE = "https://platformaopon.pl/"
-CREDENTIALS_FILE = "credentials.txt"
+CREDENTIALS_FILE = os.path.join(sys.path[0], "credentials.txt")
 
 
 hostname = platform.node()
@@ -53,7 +54,7 @@ firefox_options = Options()
 if hostname == 'user-Vostro-260':
     firefox_options.headless = True
 
-driver = webdriver.Firefox(options=firefox_options)
+driver = webdriver.Firefox(options=firefox_options, service_log_path=os.path.join(sys.path[0], "geckodriver.log"))
 driver.get(LOGIN_SITE)
 
 with open(CREDENTIALS_FILE) as fp:
