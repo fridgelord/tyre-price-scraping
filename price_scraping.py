@@ -8,6 +8,12 @@ from selenium.webdriver.firefox.options import Options
 from time import sleep
 import sys
 import os
+import logging
+
+logging.basicConfig(
+    format="%(asctime)s - %(levelname)s - %(name)s: %(message)s",
+    datefmt="%Y-%m-%d %H:%M",
+)
 
 current_date = date.today()
 
@@ -75,9 +81,10 @@ results = []
 for size in sizes:
     results.extend(platforma.collect_data(size, current_date, driver))
     if size["type"] == "PCR":
-        oponeo_results = oponeo.collect(size, current_date)
+        oponeo_size = oponeo.Oponeo(size)
+        oponeo_results = oponeo_size.collect()
         if oponeo_results:
-            results.extend(oponeo_results)
+            results.append(oponeo_results)
 
 driver.find_element_by_xpath("//a[contains(@title, 'Wyloguj')]").click()
 driver.close()
