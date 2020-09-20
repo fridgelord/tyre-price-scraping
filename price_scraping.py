@@ -4,7 +4,7 @@ from datetime import date
 import platforma
 import oponeo
 from selenium import webdriver
-from selenium.webdriver.firefox.options import Options
+from selenium.webdriver.chrome.options import Options
 from time import sleep
 import sys
 import os
@@ -56,11 +56,12 @@ CREDENTIALS_FILE = os.path.join(sys.path[0], "credentials.txt")
 
 
 hostname = platform.node()
-firefox_options = Options()
+chrome_options = Options()
+chrome_options.add_argument("--window-size=1920,1080")
 if hostname == 'user-Vostro-260':
-    firefox_options.headless = True
+    chrome_options.add_argument("--headless")
 
-driver = webdriver.Firefox(options=firefox_options, service_log_path=os.path.join(sys.path[0], "geckodriver.log"))
+driver = webdriver.Chrome(options=chrome_options)
 driver.get(LOGIN_SITE)
 
 with open(CREDENTIALS_FILE) as fp:
