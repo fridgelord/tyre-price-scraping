@@ -13,6 +13,8 @@ class Oponeo():
     PARAM_ORDER = ["season(zima,lato,wielosezon)", "osobowe/4x4/dostawcze",
                    "brand", "size", "indeks predkosci", "indeks nosnosci"]
 
+    SOURCE = "Oponeo"
+
     BUY_SITE = {
         "season(zima,lato,wielosezon)": "https://www.oponeo.pl/wybierz-opony/s=1/",
         "osobowe/4x4/dostawcze": "/t=1/",
@@ -101,4 +103,5 @@ class Oponeo():
             brand,
             self.size["type"],
             self.season_original,
+            self.SOURCE,
         ]

@@ -1,6 +1,8 @@
 from time import sleep
 from selenium.common.exceptions import NoSuchElementException
 
+SOURCE = "Platforma"
+
 PARAMS_BRAND = {
     "hankook": "52",
     "laufenn": "18945",
@@ -120,6 +122,7 @@ def collect_data(size, date, driver):
             brand,
             size["type"],
             size.get("season(zima,lato,wielosezon)", ""),
+            SOURCE,
         ])
     sleep(8)
     return(results)

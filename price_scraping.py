@@ -103,7 +103,9 @@ df = DataFrameAppend(results, columns = [
     "brand",
     "type",
     "season",
+    "DataSource",
     ],
                      )
 
+df["WebLink"] = ""
 df.append_to_excel(output_file, index=False)
