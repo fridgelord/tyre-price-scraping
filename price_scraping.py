@@ -51,7 +51,7 @@ try:
 except FileNotFoundError:
     sizes = DEFAULT_SIZES
 
-LOGIN_SITE = "https://platformaopon.pl/"
+LOGIN_SITE = "https://platformaopon.pl/login"
 CREDENTIALS_FILE = os.path.join(sys.path[0], "credentials.txt")
 
 
