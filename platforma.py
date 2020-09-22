@@ -1,7 +1,7 @@
 from time import sleep
 from selenium.common.exceptions import NoSuchElementException
 
-SOURCE = "Platforma"
+SOURCE = "PlatformaOpon"
 
 PARAMS_BRAND = {
     "hankook": "52",
