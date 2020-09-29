@@ -94,7 +94,7 @@ class Oponeo():
         try:
             long_stock = self.product.find(attrs={"data-tp": "StockLevel"})["data-tpd"]
             long_stock = re.findall(r"@MSG': '(.*)'", long_stock)[0]
-            stock = _get_short_stock(long_stock)
+            stock = self._get_short_stock(long_stock)
         except Exception:
             self.logger.exception(f"stock problem in size {self.size['size']}, brand {self.size['brand']}")
             stock = ""
