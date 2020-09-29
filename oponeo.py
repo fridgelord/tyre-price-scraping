@@ -60,10 +60,15 @@ class Oponeo():
         return BeautifulSoup(self._get_site_content(), "html.parser")
 
     def _get_short_stock(self, text):
-        pattern = "Ponad ([0-9]+) sztuk"
+        pattern1 = "Ponad ([0-9]+) sztuk"
+        pattern2 = "Ostatnie ([0-9]+) sztuk"
         try:
-            stockmatch = re.match(pattern, text)
-            return ">" + stockmatch.groups()[0]
+            stockmatch1= re.match(pattern1, text)
+            stockmatch2= re.match(pattern2, text)
+            if stockmatch1:
+                return ">" + stockmatch1.groups()[0]
+            else:
+                return stockmatch2.groups()[0]
         except Exception:
             self.logger.exception(f"Different stock type: {text}")
             return text
