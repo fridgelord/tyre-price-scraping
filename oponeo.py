@@ -14,6 +14,7 @@ class Oponeo():
                    "brand", "size", "indeks predkosci", "indeks nosnosci"]
 
     SOURCE = "Oponeo"
+    SELLER = "Oponeo B2C"
 
     BUY_SITE = {
         "season(zima,lato,wielosezon)": "https://www.oponeo.pl/wybierz-opony/s=1/",
@@ -58,11 +59,21 @@ class Oponeo():
     def _get_soup(self):
         return BeautifulSoup(self._get_site_content(), "html.parser")
 
+    def _get_short_stock(self, text):
+        pattern = "Ponad ([0-9]+) sztuk"
+        try:
+            stockmatch = re.match(pattern, text)
+            return ">" + stockmatch.groups()[0]
+        except Exception:
+            self.logger.exception(f"Different stock type: {text}")
+            return text
+
+
     def collect(self):
         soup = self._get_soup()
         self.product = soup.find(True, {'class': 'product container'})
         if not self.product:
-            logger.error(f"product size {self.size['size']}, brand {self.size['brand']}: not found")
+            self.logger.error(f"product size {self.size['size']}, brand {self.size['brand']}: not found")
             return []
         try:
             # obligatory results
@@ -74,26 +85,26 @@ class Oponeo():
             dimension = dim + " " + li + si
             price = round(float(self.product.find("span", "price size-3").text) / 1.23, 2)
         except Exception:
-            logging.exception(f"problem in size {self.size['size']}, brand {self.size['brand']}")
+            self.logger.exception(f"problem in size {self.size['size']}, brand {self.size['brand']}")
             return []
         try:
             dot = "DOT " + self.product.find("span", "srot").text.split()[-1]
         except AttributeError:
             dot = ""
         try:
-            stock = self.product.find(attrs={"data-tp": "StockLevel"})["data-tpd"]
-            stock = re.findall(r"@MSG': '(.*)'", stock)[0]
+            long_stock = self.product.find(attrs={"data-tp": "StockLevel"})["data-tpd"]
+            long_stock = re.findall(r"@MSG': '(.*)'", long_stock)[0]
+            stock = _get_short_stock(long_stock)
         except Exception:
-            logging.exception(f"stock problem in size {self.size['size']}, brand {self.size['brand']}")
+            self.logger.exception(f"stock problem in size {self.size['size']}, brand {self.size['brand']}")
             stock = ""
         delivery = ""
         remarks = ""
-        seller = "Oponeo B2C"
 
         return [
             dimension,
             pattern,
-            seller,
+            self.SELLER,
             price,
             stock,
             dot,
