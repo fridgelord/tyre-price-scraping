@@ -1,0 +1,7 @@
+credentials.txt
+.idea/
+venv/
+__pycache__/
+.directory
+*.xlsx
+*.log
