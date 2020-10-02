@@ -1,5 +1,9 @@
 import pandas
+import os
 from openpyxl import load_workbook
+from datetime import datetime
+from pathlib import Path
+
 
 class DataFrameAppend(pandas.DataFrame):
     def __init__(self, *args, **kwargs):
@@ -39,6 +43,16 @@ class DataFrameAppend(pandas.DataFrame):
         else:
             header = True
 
+        if not os.access(filename, os.W_OK):
+            path = Path(filename)
+            directory = path.parent
+            file = path.stem
+            new_file = file + "_" + datetime.now().strftime("%Y%m%d_%H%M%S")
+            suffix = path.suffix
+            new_file_path = Path(directory).joinpath(new_file + suffix)
+            os.copy(filename, str(new_file_path))
+            filename = str(new_file_path)
+
         with pandas.ExcelWriter(filename, engine='openpyxl') as writer:
             try:
                 writer.book = load_workbook(filename)
@@ -69,6 +83,7 @@ class DataFrameAppend(pandas.DataFrame):
                 header = False
 
             self.to_excel(writer, sheet_name, startrow=startrow, header=header, **to_excel_kwargs)
+
 
 
 
