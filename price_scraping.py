@@ -5,6 +5,7 @@ import platforma
 import oponeo
 from selenium import webdriver
 from selenium.webdriver.firefox.options import Options
+from selenium.common.exceptions import TimeoutException
 from time import sleep
 import sys
 import os
@@ -86,7 +87,11 @@ for size in sizes:
         if oponeo_results:
             results.append(oponeo_results)
 
-driver.find_element_by_xpath("//a[contains(@title, 'Wyloguj')]").click()
+try:
+    driver.find_element_by_xpath("//a[contains(@title, 'Wyloguj')]").click()
+except TimeoutException:
+    logging.exception("Couldn't log out of platforma")
+
 driver.close()
 
 df = DataFrameAppend(results, columns = [
