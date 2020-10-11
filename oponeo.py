@@ -60,6 +60,9 @@ class Oponeo():
         return BeautifulSoup(self._get_site_content(), "html.parser")
 
     def _get_short_stock(self, text):
+        ask = "Zapytaj o dostępnosć"
+        if text == ask:
+            return text
         pattern1 = "Ponad ([0-9]+) sztuk"
         pattern2 = "Ostatnie ([0-9]+) sztuk"
         try:

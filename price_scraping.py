@@ -3,6 +3,7 @@ from DataFrameAppend import *
 from datetime import date
 import platforma
 import oponeo
+import sklepopon
 from selenium import webdriver
 from selenium.webdriver.firefox.options import Options
 from selenium.common.exceptions import TimeoutException
@@ -75,23 +76,28 @@ submit_field = driver.find_element_by_xpath("//input[contains(@id, 'submit')]")
 username_field.send_keys(credentials[0])
 password_field.send_keys(credentials[1])
 save_me_tick.click()
-submit_field.click()
+try:
+    submit_field.click()
+except TimeoutException:
+    pass # for some reason webdriver thinks the page doesn't load
+
 sleep(4)
 
 results = []
 for size in sizes:
     results.extend(platforma.collect_data(size, current_date, driver))
     if size["type"] == "PCR":
-        oponeo_size = oponeo.Oponeo(size)
-        oponeo_results = oponeo_size.collect()
+        oponeo_results = oponeo.Oponeo(size).collect()
         if oponeo_results:
             results.append(oponeo_results)
+        sklepopon_results = sklepopon.SklepOpon(size).collect()
+        if sklepopon_results:
+            results.append(sklepopon_results)
 
 try:
     driver.find_element_by_xpath("//a[contains(@title, 'Wyloguj')]").click()
 except TimeoutException:
-    logging.exception("Couldn't log out of platforma")
-
+    pass # for some reason webdriver thinks the page doesn't load
 driver.close()
 
 df = DataFrameAppend(results, columns = [
