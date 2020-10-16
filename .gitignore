@@ -5,3 +5,4 @@ __pycache__/
 .directory
 *.xlsx
 *.log
+.~lock.sizes.xlsx#
