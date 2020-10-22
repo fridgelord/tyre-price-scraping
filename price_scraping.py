@@ -10,6 +10,7 @@ from time import sleep
 import sys
 import os
 import logging
+import getopt
 
 logging.basicConfig(
     format="%(asctime)s - %(levelname)s - %(name)s: %(message)s",
@@ -33,13 +34,7 @@ DEFAULT_SIZES = [
 
 DEFAULT_INPUT = "sizes.xlsx"
 DEFAULT_OUTPUT = "data.xlsx"
-arguments = sys.argv
-if len(sys.argv) > 1:
-    input_file = sys.argv[1]
-    output_file = sys.argv[2]
-else:
-    input_file = DEFAULT_INPUT
-    output_file = DEFAULT_OUTPUT
+DEFAULT_DRIVER = "firefox"
 
 def get_chrome_driver(hostname):
     chrome_options = Options()
@@ -54,7 +49,6 @@ def get_firefox_driver(hostname):
         firefox_options.headless = True
     return webdriver.Firefox(options=firefox_options, service_log_path=os.path.join(sys.path[0], "geckodriver.log"))
 
-driver_selector = ("-d", "--driver")
 driver_options = {
     "firefox": get_firefox_driver,
     "chrome": get_chrome_driver,
@@ -62,18 +56,41 @@ driver_options = {
 }
 
 hostname = platform.node()
-for i in driver_selector:
-    if i in arguments:
-        position = arguments.index(i)
-        driver_selected = arguments[position + 1].lower()
-        try:
-            driver = driver_options[driver_selected]
-            driver = driver(hostname)
-        except KeyError:
-            print(f"Please insert one of {' '.join(driver_options.keys())} after -d or --driver")
-        break
-    else:
-        driver = get_firefox_driver(hostname)
+
+USAGE = """Usage: price_scraping.py [OPTION] INPUT_FILE OUTPUT_FILE"
+Simple script to scrape tyre price information from most popular Polish websites.
+
+  -d, --driver=DRIVER       use WEBDRIVER, select firefox (default), chromium
+  -c, --credentials=FILE    take platformaopon.pl credential from FILE
+  -h, --help                display this message
+  """
+
+def get_options(arguments):
+    input_file = DEFAULT_INPUT
+    output_file = DEFAULT_OUTPUT
+    try:
+        options, other_arguments = getopt.getopt(arguments, "h", "--help")
+    except getopt.GetoptError:
+        print(USAGE)
+        sys.exit(2)
+    for option, argument in options:
+        if option in ("-h", "--help"):
+            print(USAGE)
+            sys.exit()
+        if option in ("-d", "--driver"):
+            selected_driver = argument.lower()
+    if other_arguments:
+        for file in other_arguments:
+            if not(os.path.isfile(file)):
+                print("Provide valid file\n", USAGE)
+                sys.exit(2)
+        input_file = other_arguments[0]
+        output_file = other_arguments[1]
+    return input_file, output_file, selected_driver
+
+input_file, output_file, selected_driver = get_options(sys.argv[1:])
+driver = driver_options.get(selected_driver, "firefox")
+driver = driver(hostname)
 
 try:
     with open(input_file) as fp:

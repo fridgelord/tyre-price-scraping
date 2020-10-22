@@ -7,3 +7,4 @@ __pycache__/
 *.log
 chrome
 .~lock.sizes.xlsx#
+chrome
