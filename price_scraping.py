@@ -1,12 +1,11 @@
 import platform
 from DataFrameAppend import *
-from datetime import date
-import platforma
+from platforma import PlatformaOpon
 import oponeo
 import sklepopon
 from selenium import webdriver
 from selenium.webdriver.firefox.options import Options
-from selenium.common.exceptions import TimeoutException
+from selenium.webdriver.chrome.options import Options
 from time import sleep
 import sys
 import os
@@ -17,7 +16,6 @@ logging.basicConfig(
     datefmt="%Y-%m-%d %H:%M",
 )
 
-current_date = date.today()
 
 DEFAULT_SIZES = [
     {
@@ -35,6 +33,7 @@ DEFAULT_SIZES = [
 
 DEFAULT_INPUT = "sizes.xlsx"
 DEFAULT_OUTPUT = "data.xlsx"
+arguments = sys.argv
 if len(sys.argv) > 1:
     input_file = sys.argv[1]
     output_file = sys.argv[2]
@@ -42,62 +41,64 @@ else:
     input_file = DEFAULT_INPUT
     output_file = DEFAULT_OUTPUT
 
+def get_chrome_driver(hostname):
+    chrome_options = Options()
+    chrome_options.add_argument("--window-size=1920,1080")
+    if hostname == 'user-Vostro-260':
+        chrome_options.add_argument("--headless")
+    return webdriver.Chrome(options=chrome_options)
 
+def get_firefox_driver(hostname):
+    firefox_options = Options()
+    if hostname == 'user-Vostro-260':
+        firefox_options.headless = True
+    return webdriver.Firefox(options=firefox_options, service_log_path=os.path.join(sys.path[0], "geckodriver.log"))
+
+driver_selector = ("-d", "--driver")
+driver_options = {
+    "firefox": get_firefox_driver,
+    "chrome": get_chrome_driver,
+    "chromium": get_chrome_driver,
+}
+
+hostname = platform.node()
+for i in driver_selector:
+    if i in arguments:
+        position = arguments.index(i)
+        driver_selected = arguments[position + 1].lower()
+        try:
+            driver = driver_options[driver_selected]
+            driver = driver(hostname)
+        except KeyError:
+            print(f"Please insert one of {' '.join(driver_options.keys())} after -d or --driver")
+        break
+    else:
+        driver = get_firefox_driver(hostname)
 
 try:
     with open(input_file) as fp:
-        ## why context manager here????
         temp_df = pandas.read_excel(input_file, dtype="str")
         temp_df["min_dot"] = temp_df["min_dot"].astype(int)
         sizes = temp_df.to_dict("records")
 except FileNotFoundError:
     sizes = DEFAULT_SIZES
 
-LOGIN_SITE = "https://platformaopon.pl/login"
-CREDENTIALS_FILE = os.path.join(sys.path[0], "credentials.txt")
 
 
-hostname = platform.node()
-firefox_options = Options()
-if hostname == 'user-Vostro-260':
-    firefox_options.headless = True
-
-driver = webdriver.Firefox(options=firefox_options, service_log_path=os.path.join(sys.path[0], "geckodriver.log"))
-driver.get(LOGIN_SITE)
-
-with open(CREDENTIALS_FILE) as fp:
-    credentials = fp.read().splitlines()
-
-username_field = driver.find_element_by_xpath("//input[contains(@id, 'username')]")
-password_field = driver.find_element_by_xpath("//input[contains(@id, 'password')]")
-save_me_tick = driver.find_element_by_xpath("//span[contains(@class, 'tick halflings')]")
-submit_field = driver.find_element_by_xpath("//input[contains(@id, 'submit')]")
-
-username_field.send_keys(credentials[0])
-password_field.send_keys(credentials[1])
-save_me_tick.click()
-try:
-    submit_field.click()
-except TimeoutException:
-    pass # for some reason webdriver thinks the page doesn't load
-
-sleep(4)
-
+platformaopon = PlatformaOpon(driver)
 results = []
 for size in sizes:
-    results.extend(platforma.collect_data(size, current_date, driver))
-    if size["type"] == "PCR":
-        oponeo_results = oponeo.Oponeo(size).collect()
-        if oponeo_results:
-            results.append(oponeo_results)
-        sklepopon_results = sklepopon.SklepOpon(size).collect()
-        if sklepopon_results:
-            results.append(sklepopon_results)
+    platformaopon.size = size
+    results.extend(platformaopon.collect_data())
+    # if size["type"] == "PCR":
+    #     oponeo_results = oponeo.Oponeo(size).collect()
+    #     if oponeo_results:
+    #         results.append(oponeo_results)
+    #     sklepopon_results = sklepopon.SklepOpon(size).collect()
+    #     if sklepopon_results:
+    #         results.append(sklepopon_results)
 
-try:
-    driver.find_element_by_xpath("//a[contains(@title, 'Wyloguj')]").click()
-except TimeoutException:
-    pass # for some reason webdriver thinks the page doesn't load
+platformaopon.close()
 driver.close()
 
 df = DataFrameAppend(results, columns = [
