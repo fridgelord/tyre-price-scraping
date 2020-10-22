@@ -37,20 +37,35 @@ DEFAULT_SIZES = [
 DEFAULT_INPUT = "sizes.xlsx"
 DEFAULT_OUTPUT = "data.xlsx"
 
+USAGE = """Usage: price_scraping.py [OPTION] INPUT_FILE OUTPUT_FILE"
+Simple script to scrape tyre price information from most popular Polish websites.
+
+  -c, --credentials=FILE    take platformaopon.pl credential from FILE
+  -h, --help                display this message
+  """
 
 def get_options(arguments):
     input_file = DEFAULT_INPUT
     output_file = DEFAULT_OUTPUT
-    options, other_arguments = getopt.getopt(arguments, "h", "--help")
+    try:
+        options, other_arguments = getopt.getopt(arguments, "h", "--help")
+    except getopt.GetoptError:
+        print(USAGE)
+        sys.exit(2)
     for option, argument in options:
         if option in ("-h", "--help"):
-            print("Usage: python price_scraping.py input_file_path.xlsx output_file_path.xlsx")
+            print(USAGE)
+            sys.exit()
     if other_arguments:
+        for file in other_arguments:
+            if not(os.path.isfile(file)):
+                print("Provide valid file\n", USAGE)
+                sys.exit(2)
         input_file = other_arguments[0]
         output_file = other_arguments[1]
     return input_file, output_file
 
-input_file, output_file = get_options(sys.argv)
+input_file, output_file = get_options(sys.argv[1:])
 
 try:
     with open(input_file) as fp:
