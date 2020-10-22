@@ -34,19 +34,21 @@ class PlatformaOpon:
         "y": "29",
         "": "",
     }
-    SITE_PREFIX = "https://platformaopon.pl/buy/offers"
-    SITE_SUFFIX = "?SaleOfferTyreFilterForm%5BisDemo%5D=0&SaleOfferTyreFilterForm%5BisRetreaded%5D=0&SaleOfferTyreFilterForm%5Bsearch%5D="
+    SITE_PREFIX = "https://platformaopon.pl/buy/offers?"
+    SITE_SUFFIX = ("SaleOfferTyreFilterForm%5BisDemo%5D=0&SaleOfferTyreFilterForm%5"
+                   "BisRetreaded%5D=0&SaleOfferTyreFilterForm%5Bsearch%5D=")
     BUY_SITE = {
-        "brand": "?SaleOfferTyreFilterForm%5Bsale_offer%5D%5Bproducer%5D%5BpersonalizedProducersList%5D=",
-        "size": "?SaleOfferTyreFilterForm%5BtyreParameters%5D%5Bsize%5D=",
-        "season(zima,lato,wielosezon)": "?SaleOfferTyreFilterForm%5BtyreParameters%5D%5Bseason%5D=",
-        "indeks nosnosci": "?SaleOfferTyreFilterForm%5BtyreParameters%5D%5Bcapacity%5D=",
-        "indeks predkosci": "?SaleOfferTyreFilterForm%5BtyreParameters%5D%5Bspeed%5D=",
-        "bieznik(nieobowiazkowy)": "?SaleOfferTyreFilterForm%5Bsale_offer%5D%5Bname%5D=",
-        "min. sztuk": "?SaleOfferTyreFilterForm%5Bsale_offer%5D%5Bamount%5D%5Bmin%5D=",
+        "brand": "SaleOfferTyreFilterForm%5Bsale_offer%5D%5Bproducer%5D%5BpersonalizedProducersList%5D=",
+        "size": "SaleOfferTyreFilterForm%5BtyreParameters%5D%5Bsize%5D=",
+        "season(zima,lato,wielosezon)": "SaleOfferTyreFilterForm%5BtyreParameters%5D%5Bseason%5D=",
+        "indeks nosnosci": "SaleOfferTyreFilterForm%5BtyreParameters%5D%5Bcapacity%5D=",
+        "indeks predkosci": "SaleOfferTyreFilterForm%5BtyreParameters%5D%5Bspeed%5D=",
+        "bieznik(nieobowiazkowy)": "SaleOfferTyreFilterForm%5Bsale_offer%5D%5Bname%5D=",
+        "min. sztuk": "SaleOfferTyreFilterForm%5Bsale_offer%5D%5Bamount%5D%5Bmin%5D=",
     }
-    PARAM_ORDER = ["season(zima,lato,wielosezon)", "bieznik(nieobowiazkowy)", "min. sztuk",
-                   "brand", "size", "indeks predkosci", "indeks nosnosci"]
+    PARAM_ORDER = ["brand", "size", "season(zima,lato,wielosezon)",
+                   "indeks nosnosci", "indeks predkosci", "bieznik(nieobowiazkowy)",
+                   "min. sztuk", ]
 
     def __init__(self, driver):
         with open(self.CREDENTIALS_FILE) as fp:
@@ -88,26 +90,29 @@ class PlatformaOpon:
     @size.setter
     def size(self, size):
         self._size = size.copy()
-        self._description = f"{size['brand']} {size['size']}"
+        self._description = " ".join([size['brand'], size['size'],
+                             (f"{size.get('indeks nosnosci', '')}"
+                              f"{size.get('indeks predkosci', '')}")]
+                                                     )
         self._type = size.get("type", "")
         self._brand = size.get("brand", "")
-        self._min_dot = size.get("min_dot", "")
+        self._min_dot = int(size.get("min_dot", 0))
         self._season = size.get("season(zima,lato,wielosezon)", "")
         self._size["brand"] = self.PARAMS_BRAND.get(self._size["brand"].lower())
-        self._size["season(zima,lato,wielosezon)"] = self.PARAMS_SEASON.get(self._size["season(zima,lato,wielosezon)"].lower())
+        self._size["season(zima,lato,wielosezon)"] = (
+            self.PARAMS_SEASON.get(self._size["season(zima,lato,wielosezon)"].lower()))
         if "indeks predkosci" in self._size:
             self._size["indeks predkosci"] = self.PARAMS_SI.get(self._size["indeks predkosci"].lower())
         self._size["size"] = self._size["size"].replace("/", "%2F")
 
     @property
     def address(self):
-        address = [self.SITE_PREFIX]
+        address = []
         for parameter in self.PARAM_ORDER:
             if parameter in self.size:
-                address.append(self.BUY_SITE[parameter])
-                address.append(self.size[parameter])
+                address.append(self.BUY_SITE[parameter] + self.size[parameter])
         address.append(self.SITE_SUFFIX)
-        return "".join(address)
+        return self.SITE_PREFIX + "&".join(address)
 
     def _get_data(self, offer):
         try:
@@ -129,7 +134,7 @@ class PlatformaOpon:
             dot = offer.find_element_by_xpath(".//div[contains(@class, 'tyre-year')]").text
         except NoSuchElementException:
             dot = ""
-        if is_old_dot(dot):
+        if self.is_old_dot(dot):
             return []
         try:
             remarks = offer.find_element_by_xpath(".//div[contains(@class, 'description')]").text
@@ -151,9 +156,9 @@ class PlatformaOpon:
             self.SOURCE,
         ]
 
-    def collect_data(self):
+    def collect(self):
         """Collect information from platformaopon.pl about
-        10 best offers for selected sizes
+        10 best offers for selected size
 
         returns: list
         """
@@ -170,5 +175,5 @@ class PlatformaOpon:
             if data:
                 i += 1
                 results.append(data)
-        sleep(8)
-        return(results)
+        sleep(4)
+        return results
