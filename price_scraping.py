@@ -11,6 +11,7 @@ from time import sleep
 import sys
 import os
 import logging
+import getopt
 
 logging.basicConfig(
     format="%(asctime)s - %(levelname)s - %(name)s: %(message)s",
@@ -35,14 +36,21 @@ DEFAULT_SIZES = [
 
 DEFAULT_INPUT = "sizes.xlsx"
 DEFAULT_OUTPUT = "data.xlsx"
-if len(sys.argv) > 1:
-    input_file = sys.argv[1]
-    output_file = sys.argv[2]
-else:
+
+
+def get_options(arguments):
     input_file = DEFAULT_INPUT
     output_file = DEFAULT_OUTPUT
+    options, other_arguments = getopt.getopt(arguments, "h", "--help")
+    for option, argument in options:
+        if option in ("-h", "--help"):
+            print("Usage: python price_scraping.py input_file_path.xlsx output_file_path.xlsx")
+    if other_arguments:
+        input_file = other_arguments[0]
+        output_file = other_arguments[1]
+    return input_file, output_file
 
-
+input_file, output_file = get_options(sys.argv)
 
 try:
     with open(input_file) as fp:
