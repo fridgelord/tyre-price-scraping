@@ -17,7 +17,6 @@ logging.basicConfig(
     datefmt="%Y-%m-%d %H:%M",
 )
 
-
 DEFAULT_SIZES = [
     {
         "brand": "Hankook",
@@ -32,108 +31,141 @@ DEFAULT_SIZES = [
     },
 ]
 
-DEFAULT_INPUT = "sizes.xlsx"
-DEFAULT_OUTPUT = "data.xlsx"
-DEFAULT_DRIVER = "firefox"
-
-def get_chrome_driver(hostname):
-    chrome_options = Options()
-    chrome_options.add_argument("--window-size=1920,1080")
-    if hostname == 'user-Vostro-260':
-        chrome_options.add_argument("--headless")
-    return webdriver.Chrome(options=chrome_options)
-
-def get_firefox_driver(hostname):
-    firefox_options = Options()
-    if hostname == 'user-Vostro-260':
-        firefox_options.headless = True
-    return webdriver.Firefox(options=firefox_options, service_log_path=os.path.join(sys.path[0], "geckodriver.log"))
-
-driver_options = {
-    "firefox": get_firefox_driver,
-    "chrome": get_chrome_driver,
-    "chromium": get_chrome_driver,
-}
-
-hostname = platform.node()
 
 USAGE = """Usage: price_scraping.py [OPTION] INPUT_FILE OUTPUT_FILE"
 Simple script to scrape tyre price information from most popular Polish websites.
 
   -d, --driver=DRIVER       use WEBDRIVER, select firefox (default), chromium
+  -s, --sources=SOURCES     download data from comma-separated list of sources,
+                            default: platformaopon,oponeo,skleopon
   -c, --credentials=FILE    take platformaopon.pl credential from FILE
   -h, --help                display this message
   """
 
-def get_options(arguments):
-    input_file = DEFAULT_INPUT
-    output_file = DEFAULT_OUTPUT
+def get_options(arguments, usage):
+    args = {}
     try:
-        options, other_arguments = getopt.getopt(arguments, "h", "--help")
+        options, other_arguments = getopt.getopt(arguments,
+                                                 "hd:c:s:",
+                                                 ["help", "driver=", "credentials=", "sources="])
     except getopt.GetoptError:
-        print(USAGE)
+        print(usage)
         sys.exit(2)
     for option, argument in options:
         if option in ("-h", "--help"):
-            print(USAGE)
+            print(usage)
             sys.exit()
         if option in ("-d", "--driver"):
-            selected_driver = argument.lower()
+            args["driver_type"] = argument.lower()
+        if option in ("-s", "--sources"):
+            args["sources"] = argument.lower().split(",")
     if other_arguments:
         for file in other_arguments:
             if not(os.path.isfile(file)):
-                print("Provide valid file\n", USAGE)
+                print("Provide valid file", usage, sep="\n")
                 sys.exit(2)
-        input_file = other_arguments[0]
-        output_file = other_arguments[1]
-    return input_file, output_file, selected_driver
+        args["input_file"] = other_arguments[0]
+        args["output_file"] = other_arguments[1]
+    return args
 
-input_file, output_file, selected_driver = get_options(sys.argv[1:])
-driver = driver_options.get(selected_driver, "firefox")
-driver = driver(hostname)
 
-try:
-    with open(input_file) as fp:
-        temp_df = pandas.read_excel(input_file, dtype="str")
+class PriceScraper():
+    def __init__(self,
+                 input_file="sizes.xlsx",
+                 output_file="data.xlsx",
+                 credentials_file="credentials.txt",
+                 driver_type="firefox",
+                 sources=["platformaopon", "oponeo", "sklepopon"],
+                 ):
+        self.input_file = input_file
+        self.output_file = output_file
+        self.credentials = credentials_file
+        self.driver_type = driver_type
+        self.sources = sources
+        self.hostname = platform.node()
+
+    @property
+    def sizes(self):
+        temp_df = pandas.read_excel(self.input_file, dtype="str")
         temp_df["min_dot"] = temp_df["min_dot"].astype(int)
-        sizes = temp_df.to_dict("records")
-except FileNotFoundError:
-    sizes = DEFAULT_SIZES
+        return temp_df.to_dict("records")
 
+    def get_chrome_driver(self):
+        chrome_options = Options()
+        chrome_options.add_argument("--window-size=1920,1080")
+        if self.hostname == 'user-Vostro-260':
+            chrome_options.add_argument("--headless")
+        return webdriver.Chrome(options=chrome_options)
 
+    def get_firefox_driver(self):
+        firefox_options = Options()
+        if self.hostname == 'user-Vostro-260':
+            firefox_options.headless = True
+        return webdriver.Firefox(options=firefox_options,
+                                 service_log_path=os.path.join(sys.path[0], "geckodriver.log"))
 
-platformaopon = PlatformaOpon(driver)
-results = []
-for size in sizes:
-    platformaopon.size = size
-    results.extend(platformaopon.collect_data())
-    # if size["type"] == "PCR":
-    #     oponeo_results = oponeo.Oponeo(size).collect()
-    #     if oponeo_results:
-    #         results.append(oponeo_results)
-    #     sklepopon_results = sklepopon.SklepOpon(size).collect()
-    #     if sklepopon_results:
-    #         results.append(sklepopon_results)
+    def driver_option(self):
+        DRIVER_OPTIONS = {
+            "firefox": self.get_firefox_driver,
+            "chrome": self.get_chrome_driver,
+            "chromium": self.get_chrome_driver,
+        }
+        try:
+            return DRIVER_OPTIONS[self.driver_type]
+        except KeyError:
+            print(f"Select proper driver from: {', '.join(DRIVER_OPTIONS.keys())}")
+            sys.exit(2)
 
-platformaopon.close()
-driver.close()
+    @property
+    def driver(self):
+        driver = self.driver_option()
+        return driver()
 
-df = DataFrameAppend(results, columns = [
-    "size",
-    "pattern",
-    "seller",
-    "price",
-    "stock",
-    "dot",
-    "remarks",
-    "delivery",
-    "date",
-    "brand",
-    "type",
-    "season",
-    "DataSource",
-    ],
-                     )
+    def test(self):
+        print(self.input_file, self.output_file, self.driver, self.credentials, sep="\n")
 
-df["WebLink"] = ""
-df.append_to_excel(output_file, index=False)
+    def collect(self):
+        self.results = []
+        if "platformaopon" in self.sources:
+            platformaopon = PlatformaOpon(self.driver)
+        for size in self.sizes:
+            if "platformaopon" in self.sources:
+                platformaopon.size = size
+                self.results.extend(platformaopon.collect_data())
+            if size["type"] == "PCR" and "oponeo" in self.sources:
+                oponeo_results = oponeo.Oponeo(size).collect()
+                if oponeo_results:
+                    results.append(oponeo_results)
+            if size["type"] == "PCR" and "sklepopon" in self.sources:
+                sklepopon_results = sklepopon.SklepOpon(size).collect()
+                if sklepopon_results:
+                    results.append(sklepopon_results)
+
+        if "platformaopon" in self.sources:
+            platformaopon.close()
+            self.driver.close()
+
+    def dump_data(self):
+        df = DataFrameAppend(self.results, columns = [
+            "size",
+            "pattern",
+            "seller",
+            "price",
+            "stock",
+            "dot",
+            "remarks",
+            "delivery",
+            "date",
+            "brand",
+            "type",
+            "season",
+            "DataSource",
+            ],
+                             )
+
+        df["WebLink"] = ""
+        df.append_to_excel(self.output_file, index=False)
+
+command_line_options = get_options(sys.argv[1:], USAGE)
+price_scraper = PriceScraper(**command_line_options)
+price_scraper.test()
