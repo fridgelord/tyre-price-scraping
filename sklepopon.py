@@ -97,7 +97,7 @@ class SklepOpon():
             remarks = self.product.find("span", "prd_prod_date").find("span", "custom_msg").text
         except AttributeError:
             remarks = ""
-        stock = ""
+        stock = "40"
         delivery = ""
 
         return [
