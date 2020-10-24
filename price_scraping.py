@@ -4,8 +4,8 @@ from platforma import PlatformaOpon
 import oponeo
 import sklepopon
 from selenium import webdriver
-from selenium.webdriver.firefox.options import Options
-from selenium.webdriver.chrome.options import Options
+from selenium.webdriver.firefox.options import Options as FirefoxOptions
+from selenium.webdriver.chrome.options import Options as ChromeOptions
 from time import sleep
 import sys
 import os
@@ -70,19 +70,25 @@ def get_options(arguments, usage):
 
 
 class PriceScraper():
+    DEFAULT_SOURCES = ["platformaopon", "oponeo", "sklepopon"]
     def __init__(self,
                  input_file="sizes.xlsx",
                  output_file="data.xlsx",
                  credentials_file="credentials.txt",
                  driver_type="firefox",
-                 sources=["platformaopon", "oponeo", "sklepopon"],
+                 sources=DEFAULT_SOURCES,
                  ):
         self.input_file = input_file
         self.output_file = output_file
         self.credentials = credentials_file
         self.driver_type = driver_type
+        for source in sources:
+            if source not in self.DEFAULT_SOURCES:
+                raise Exception(f"Source \"{source}\" incorrect,"
+                                f" must be one of: {', '.join(self.DEFAULT_SOURCES)}")
         self.sources = sources
         self.hostname = platform.node()
+
 
     @property
     def sizes(self):
@@ -91,14 +97,14 @@ class PriceScraper():
         return temp_df.to_dict("records")
 
     def get_chrome_driver(self):
-        chrome_options = Options()
+        chrome_options = ChromeOptions()
         chrome_options.add_argument("--window-size=1920,1080")
         if self.hostname == 'user-Vostro-260':
             chrome_options.add_argument("--headless")
         return webdriver.Chrome(options=chrome_options)
 
     def get_firefox_driver(self):
-        firefox_options = Options()
+        firefox_options = FirefoxOptions()
         if self.hostname == 'user-Vostro-260':
             firefox_options.headless = True
         return webdriver.Firefox(options=firefox_options,
@@ -113,16 +119,13 @@ class PriceScraper():
         try:
             return DRIVER_OPTIONS[self.driver_type]
         except KeyError:
-            print(f"Select proper driver from: {', '.join(DRIVER_OPTIONS.keys())}")
-            sys.exit(2)
+            raise Exception(f"Driver \"{self.driver_type}\" incorrect."
+                            f" Select proper driver from: {', '.join(DRIVER_OPTIONS)}")
 
     @property
     def driver(self):
         driver = self.driver_option()
         return driver()
-
-    def test(self):
-        print(self.input_file, self.output_file, self.driver, self.credentials, sep="\n")
 
     def collect(self):
         self.results = []
@@ -135,12 +138,11 @@ class PriceScraper():
             if size["type"] == "PCR" and "oponeo" in self.sources:
                 oponeo_results = oponeo.Oponeo(size).collect()
                 if oponeo_results:
-                    results.append(oponeo_results)
+                    self.results.append(oponeo_results)
             if size["type"] == "PCR" and "sklepopon" in self.sources:
                 sklepopon_results = sklepopon.SklepOpon(size).collect()
                 if sklepopon_results:
-                    results.append(sklepopon_results)
-
+                    self.results.append(sklepopon_results)
         if "platformaopon" in self.sources:
             platformaopon.close()
             self.driver.close()
@@ -166,6 +168,9 @@ class PriceScraper():
         df["WebLink"] = ""
         df.append_to_excel(self.output_file, index=False)
 
-command_line_options = get_options(sys.argv[1:], USAGE)
-price_scraper = PriceScraper(**command_line_options)
-price_scraper.test()
+
+if __name__ == "__main__":
+    command_line_options = get_options(sys.argv[1:], USAGE)
+    price_scraper = PriceScraper(**command_line_options)
+    price_scraper.collect()
+    # price_scraper.dump_data()
