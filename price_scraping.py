@@ -17,21 +17,6 @@ logging.basicConfig(
     datefmt="%Y-%m-%d %H:%M",
 )
 
-DEFAULT_SIZES = [
-    {
-        "brand": "Hankook",
-        "size": "195/65R15",
-        "season(zima,lato,wielosezon)": "zima",
-        "indeks nosnosci": "91",
-        "indeks predkosci": "T",
-        "bieznik(nieobowiazkowy)": "W452",
-        "min. sztuk": "20",
-        "min_dot": 2019,
-        "type": "PCR",
-    },
-]
-
-
 USAGE = """Usage: price_scraping.py [OPTION] INPUT_FILE OUTPUT_FILE"
 Simple script to scrape tyre price information from most popular Polish websites.
 
@@ -61,19 +46,21 @@ def get_options(arguments, usage):
             args["sources"] = argument.lower().split(",")
     if other_arguments:
         for file in other_arguments:
-            if not(os.path.isfile(file)):
-                print("Provide valid file", usage, sep="\n")
-                sys.exit(2)
+            if not(os.path.isfile(file)) or len(other_arguments) != 2:
+                sys.exit(f"Provide valid filenames \n\n{usage}")
         args["input_file"] = other_arguments[0]
         args["output_file"] = other_arguments[1]
     return args
 
 
 class PriceScraper():
+    logger = logging.getLogger("PriceScraper")
+
     DEFAULT_SOURCES = ["platformaopon", "oponeo", "sklepopon"]
+
     def __init__(self,
-                 input_file="sizes.xlsx",
-                 output_file="data.xlsx",
+                 input_file="data/input/sizes.xlsx",
+                 output_file="data/output/data.xlsx",
                  credentials_file="credentials.txt",
                  driver_type="firefox",
                  sources=DEFAULT_SOURCES,
@@ -88,6 +75,7 @@ class PriceScraper():
                                 f" must be one of: {', '.join(self.DEFAULT_SOURCES)}")
         self.sources = sources
         self.hostname = platform.node()
+        self.results = []
 
 
     @property
@@ -119,30 +107,35 @@ class PriceScraper():
         try:
             return DRIVER_OPTIONS[self.driver_type]
         except KeyError:
-            raise Exception(f"Driver \"{self.driver_type}\" incorrect."
-                            f" Select proper driver from: {', '.join(DRIVER_OPTIONS)}")
+            sys.exit(f"Driver \"{self.driver_type}\" incorrect."
+                     f" Select proper driver from: {', '.join(DRIVER_OPTIONS)}")
 
     @property
     def driver(self):
         driver = self.driver_option()
         return driver()
 
+    def _collect_sklepopon(self, size):
+        sklepopon_results = sklepopon.SklepOpon(size).collect()
+        if sklepopon_results:
+            self.results.append(sklepopon_results)
+
+    def _collect_oponeo(self, size):
+        oponeo_results = oponeo.Oponeo(size).collect()
+        if oponeo_results:
+            self.results.append(oponeo_results)
+
     def collect(self):
-        self.results = []
         if "platformaopon" in self.sources:
             platformaopon = PlatformaOpon(self.driver)
         for size in self.sizes:
             if "platformaopon" in self.sources:
                 platformaopon.size = size
-                self.results.extend(platformaopon.collect_data())
+                self.results.extend(platformaopon.collect())
             if size["type"] == "PCR" and "oponeo" in self.sources:
-                oponeo_results = oponeo.Oponeo(size).collect()
-                if oponeo_results:
-                    self.results.append(oponeo_results)
+                self._collect_oponeo(size)
             if size["type"] == "PCR" and "sklepopon" in self.sources:
-                sklepopon_results = sklepopon.SklepOpon(size).collect()
-                if sklepopon_results:
-                    self.results.append(sklepopon_results)
+                self._collect_sklepopon(size)
         if "platformaopon" in self.sources:
             platformaopon.close()
             self.driver.close()
@@ -173,4 +166,4 @@ if __name__ == "__main__":
     command_line_options = get_options(sys.argv[1:], USAGE)
     price_scraper = PriceScraper(**command_line_options)
     price_scraper.collect()
-    # price_scraper.dump_data()
+    price_scraper.dump_data()

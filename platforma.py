@@ -96,7 +96,7 @@ class PlatformaOpon:
                                                      )
         self._type = size.get("type", "")
         self._brand = size.get("brand", "")
-        self._min_dot = size.get("min_dot", "")
+        self._min_dot = int(size.get("min_dot", 0))
         self._season = size.get("season(zima,lato,wielosezon)", "")
         self._size["brand"] = self.PARAMS_BRAND.get(self._size["brand"].lower())
         self._size["season(zima,lato,wielosezon)"] = (
@@ -134,7 +134,7 @@ class PlatformaOpon:
             dot = offer.find_element_by_xpath(".//div[contains(@class, 'tyre-year')]").text
         except NoSuchElementException:
             dot = ""
-        if is_old_dot(dot):
+        if self.is_old_dot(dot):
             return []
         try:
             remarks = offer.find_element_by_xpath(".//div[contains(@class, 'description')]").text
@@ -156,7 +156,7 @@ class PlatformaOpon:
             self.SOURCE,
         ]
 
-    def collect_data(self):
+    def collect(self):
         """Collect information from platformaopon.pl about
         10 best offers for selected size
 

@@ -3,6 +3,7 @@ import platforma
 from time import sleep
 from selenium import webdriver
 from selenium.webdriver.chrome.options import Options as ChromeOptions
+from datetime import datetime
 
 class TestOponeo(unittest.TestCase):
     DEFAULT_SIZES = [
@@ -54,6 +55,7 @@ class TestOponeo(unittest.TestCase):
             "size": "195/65R15",
             "season(zima,lato,wielosezon)": "zima",
             "type": "PCR",
+            "indeks nosnosci": "110/112",
             "osobowe/4x4/dostawcze": "dostawcze",
         }
     ]
@@ -79,24 +81,25 @@ class TestOponeo(unittest.TestCase):
             self.platforma_opon.size = size
             self.assertEqual(self.platforma_opon.address, address)
 
-    # def test_collect(self):
-    #     sleep(1)
-    #     result0 = self.sizes[0].collect()
-    #     self.assertIsNotNone(self.sizes[0].product)
-    #     self.assertIn("195/65R15", result0[0])
+    def test_collect(self):
+        self.platforma_opon.size = self.DEFAULT_SIZES[0]
+        result0 = self.platforma_opon.collect()
+        self.assertIn("195/65R15", result0[0][0])
+        self.assertIn("195/65R15", result0[9][0])
 
-    #     sleep(1)
-    #     result1 = self.sizes[1].collect()
-    #     self.assertGreater(result1[3], 0.0)
+        self.platforma_opon.size = self.DEFAULT_SIZES[1]
+        result1 = self.platforma_opon.collect()
+        self.assertGreater(result1[4][3], 0.0)
+        for data in result1:
+            dot = datetime.now().year if data[5] == "" else int(data[5][-4:])
+            self.assertGreater(dot, self.DEFAULT_SIZES[1]["min_dot"] - 1)
+        self.platforma_opon.size = self.DEFAULT_SIZES[2]
+        result2 = self.platforma_opon.collect()
+        self.assertEqual("225/65R16 112/110R", result2[1][0])
 
-    #     sleep(1)
-    #     result2 = self.sizes[2].collect()
-    #     self.assertEqual("225/65R16 112/110R", result2[0])
-
-    #     sleep(1)
-    #     result4 = self.sizes[4].collect()
-    #     self.assertIsNone(self.sizes[4].product)
-    #     self.assertEqual(result4, [])
+        self.platforma_opon.size = self.DEFAULT_SIZES[4]
+        result4 = self.platforma_opon.collect()
+        self.assertEqual(result4, [])
 
 
 if __name__ == "__main__":
