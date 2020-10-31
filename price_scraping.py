@@ -3,6 +3,7 @@ from DataFrameAppend import *
 from platforma import PlatformaOpon
 import oponeo
 import sklepopon
+import intercars
 from selenium import webdriver
 from selenium.webdriver.firefox.options import Options as FirefoxOptions
 from selenium.webdriver.chrome.options import Options as ChromeOptions
@@ -56,7 +57,7 @@ def get_options(arguments, usage):
 class PriceScraper():
     logger = logging.getLogger("PriceScraper")
 
-    DEFAULT_SOURCES = ["platformaopon", "oponeo", "sklepopon"]
+    DEFAULT_SOURCES = ["platformaopon", "oponeo", "sklepopon", "intercars"]
 
     def __init__(self,
                  input_file="data/input/sizes.xlsx",
@@ -70,10 +71,10 @@ class PriceScraper():
         self.credentials = credentials_file
         self.driver_type = driver_type
         for source in sources:
-            if source not in self.DEFAULT_SOURCES:
+            if source.lower() not in self.DEFAULT_SOURCES:
                 raise Exception(f"Source \"{source}\" incorrect,"
                                 f" must be one of: {', '.join(self.DEFAULT_SOURCES)}")
-        self.sources = sources
+        self.sources = [i.lower() for i in sources]
         self.hostname = platform.node()
         self.results = []
 
@@ -120,6 +121,11 @@ class PriceScraper():
         if sklepopon_results:
             self.results.append(sklepopon_results)
 
+    def _collect_intercars(self, size):
+        resutls = intercars.InterCars(size).collect()
+        if resutls:
+            self.results.append(resutls)
+
     def _collect_oponeo(self, size):
         oponeo_results = oponeo.Oponeo(size).collect()
         if oponeo_results:
@@ -136,6 +142,8 @@ class PriceScraper():
                 self._collect_oponeo(size)
             if size["type"] == "PCR" and "sklepopon" in self.sources:
                 self._collect_sklepopon(size)
+            if size["type"] == "PCR" and "intercars" in self.sources:
+                self._collect_intercars(size)
         if "platformaopon" in self.sources:
             platformaopon.close()
             self.driver.close()

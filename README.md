@@ -25,6 +25,7 @@ The following websites are supported:
 - [oponeo.pl](https://www.oponeo.pl)
 - [sklepopon.pl](https://www.sklepopon.pl)
 - [platformaopon.pl](https://www.platformaopon.pl)
+- [intercars.pl](https://intercars.pl)
 
 In case of B2C sites the first record in listing (usually lowest price with sufficient stock) is recorded.  
 For platformaopon.pl 10 best offers fulfilling requirements from `input_file.xlsx` are selected.
