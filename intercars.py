@@ -15,7 +15,7 @@ class InterCars():
                    ]
 
     SOURCE = "InterCars"
-    SELLER = "InterCars"
+    SELLER = "InterCars B2C"
 
     BUY_SITE = {
         "width": "https://intercars.pl/szukaj/opony-201/?cf_szerokosc=",
@@ -94,13 +94,16 @@ class InterCars():
             pattern = pattern[1:pattern.find(dim)-1]
             index = self.product.find("span", string="Indeksy: ").next_sibling.text
             dimension = dim + " " + index
-            price_box = self.product.find("span", "retail-price").text.replace(",", ".")
+            try:
+                price_box = self.product.find("span", "retail-price").text.replace(",", ".")
+            except AttributeError:
+                price_box = self.product.find("span", "current-price nowrap").text.replace(",", ".")
             price = round(float(price_box.split()[0]) / 1.23, 2)
         except Exception:
             self.logger.exception(f"problem in size {self.size['size']}, brand {self.size['brand']}")
             return []
         try:
-            index = "DOT " + self.product.find("span", string="Rok produkcji:").next_silbling.text
+            dot = "DOT " + self.product.find("span", string="Rok produkcji: ").next_sibling.text.strip()
         except AttributeError:
             dot = ""
         remarks = ""
