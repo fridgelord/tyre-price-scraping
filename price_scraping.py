@@ -1,121 +1,177 @@
 import platform
 from DataFrameAppend import *
-from datetime import date
-import platforma
+from platforma import PlatformaOpon
 import oponeo
 import sklepopon
+import intercars
 from selenium import webdriver
-from selenium.webdriver.firefox.options import Options
-from selenium.common.exceptions import TimeoutException
+from selenium.webdriver.firefox.options import Options as FirefoxOptions
+from selenium.webdriver.chrome.options import Options as ChromeOptions
 from time import sleep
 import sys
 import os
 import logging
+import getopt
 
 logging.basicConfig(
     format="%(asctime)s - %(levelname)s - %(name)s: %(message)s",
     datefmt="%Y-%m-%d %H:%M",
 )
 
-current_date = date.today()
+USAGE = """Usage: price_scraping.py [OPTION] INPUT_FILE OUTPUT_FILE"
+Simple script to scrape tyre price information from most popular Polish websites.
 
-DEFAULT_SIZES = [
-    {
-        "brand": "Hankook",
-        "size": "195/65R15",
-        "season(zima,lato,wielosezon)": "zima",
-        "indeks nosnosci": "91",
-        "indeks predkosci": "T",
-        "bieznik(nieobowiazkowy)": "W452",
-        "min. sztuk": "20",
-        "min_dot": 2019,
-        "type": "PCR",
-    },
-]
+  -d, --driver=DRIVER       use WEBDRIVER, select firefox (default), chromium
+  -s, --sources=SOURCES     download data from comma-separated list of sources,
+                            default: platformaopon,oponeo,skleopon
+  -c, --credentials=FILE    take platformaopon.pl credential from FILE
+  -h, --help                display this message
+  """
 
-DEFAULT_INPUT = "sizes.xlsx"
-DEFAULT_OUTPUT = "data.xlsx"
-if len(sys.argv) > 1:
-    input_file = sys.argv[1]
-    output_file = sys.argv[2]
-else:
-    input_file = DEFAULT_INPUT
-    output_file = DEFAULT_OUTPUT
+def get_options(arguments, usage):
+    args = {}
+    try:
+        options, other_arguments = getopt.getopt(arguments,
+                                                 "hd:c:s:",
+                                                 ["help", "driver=", "credentials=", "sources="])
+    except getopt.GetoptError:
+        print(usage)
+        sys.exit(2)
+    for option, argument in options:
+        if option in ("-h", "--help"):
+            print(usage)
+            sys.exit()
+        if option in ("-d", "--driver"):
+            args["driver_type"] = argument.lower()
+        if option in ("-s", "--sources"):
+            args["sources"] = argument.lower().split(",")
+    if other_arguments:
+        for file in other_arguments:
+            if not(os.path.isfile(file)) or len(other_arguments) != 2:
+                sys.exit(f"Provide valid filenames \n\n{usage}")
+        args["input_file"] = other_arguments[0]
+        args["output_file"] = other_arguments[1]
+    return args
 
 
+class PriceScraper():
+    logger = logging.getLogger("PriceScraper")
 
-try:
-    with open(input_file) as fp:
-        ## why context manager here????
-        temp_df = pandas.read_excel(input_file, dtype="str")
+    DEFAULT_SOURCES = ["platformaopon", "oponeo", "sklepopon", "intercars"]
+
+    def __init__(self,
+                 input_file="data/input/sizes.xlsx",
+                 output_file="data/output/data.xlsx",
+                 credentials_file="credentials.txt",
+                 driver_type="firefox",
+                 sources=DEFAULT_SOURCES,
+                 ):
+        self.input_file = input_file
+        self.output_file = output_file
+        self.credentials = credentials_file
+        self.driver_type = driver_type
+        for source in sources:
+            if source.lower() not in self.DEFAULT_SOURCES:
+                raise Exception(f"Source \"{source}\" incorrect,"
+                                f" must be one of: {', '.join(self.DEFAULT_SOURCES)}")
+        self.sources = [i.lower() for i in sources]
+        self.hostname = platform.node()
+        self.results = []
+
+
+    @property
+    def sizes(self):
+        temp_df = pandas.read_excel(self.input_file, dtype="str")
         temp_df["min_dot"] = temp_df["min_dot"].astype(int)
-        sizes = temp_df.to_dict("records")
-except FileNotFoundError:
-    sizes = DEFAULT_SIZES
+        return temp_df.to_dict("records")
 
-LOGIN_SITE = "https://platformaopon.pl/login"
-CREDENTIALS_FILE = os.path.join(sys.path[0], "credentials.txt")
+    def get_chrome_driver(self):
+        chrome_options = ChromeOptions()
+        chrome_options.add_argument("--window-size=1920,1080")
+        if self.hostname == 'user-Vostro-260':
+            chrome_options.add_argument("--headless")
+        return webdriver.Chrome(options=chrome_options)
 
+    def get_firefox_driver(self):
+        firefox_options = FirefoxOptions()
+        if self.hostname == 'user-Vostro-260':
+            firefox_options.headless = True
+        return webdriver.Firefox(options=firefox_options,
+                                 service_log_path=os.path.join(sys.path[0], "geckodriver.log"))
 
-hostname = platform.node()
-firefox_options = Options()
-if hostname == 'user-Vostro-260':
-    firefox_options.headless = True
+    def driver_option(self):
+        DRIVER_OPTIONS = {
+            "firefox": self.get_firefox_driver,
+            "chrome": self.get_chrome_driver,
+            "chromium": self.get_chrome_driver,
+        }
+        try:
+            return DRIVER_OPTIONS[self.driver_type]
+        except KeyError:
+            sys.exit(f"Driver \"{self.driver_type}\" incorrect."
+                     f" Select proper driver from: {', '.join(DRIVER_OPTIONS)}")
 
-driver = webdriver.Firefox(options=firefox_options, service_log_path=os.path.join(sys.path[0], "geckodriver.log"))
-driver.get(LOGIN_SITE)
+    @property
+    def driver(self):
+        driver = self.driver_option()
+        return driver()
 
-with open(CREDENTIALS_FILE) as fp:
-    credentials = fp.read().splitlines()
-
-username_field = driver.find_element_by_xpath("//input[contains(@id, 'username')]")
-password_field = driver.find_element_by_xpath("//input[contains(@id, 'password')]")
-save_me_tick = driver.find_element_by_xpath("//span[contains(@class, 'tick halflings')]")
-submit_field = driver.find_element_by_xpath("//input[contains(@id, 'submit')]")
-
-username_field.send_keys(credentials[0])
-password_field.send_keys(credentials[1])
-save_me_tick.click()
-try:
-    submit_field.click()
-except TimeoutException:
-    pass # for some reason webdriver thinks the page doesn't load
-
-sleep(4)
-
-results = []
-for size in sizes:
-    results.extend(platforma.collect_data(size, current_date, driver))
-    if size["type"] == "PCR":
-        oponeo_results = oponeo.Oponeo(size).collect()
-        if oponeo_results:
-            results.append(oponeo_results)
+    def _collect_sklepopon(self, size):
         sklepopon_results = sklepopon.SklepOpon(size).collect()
         if sklepopon_results:
-            results.append(sklepopon_results)
+            self.results.append(sklepopon_results)
 
-try:
-    driver.find_element_by_xpath("//a[contains(@title, 'Wyloguj')]").click()
-except TimeoutException:
-    pass # for some reason webdriver thinks the page doesn't load
-driver.close()
+    def _collect_intercars(self, size):
+        resutls = intercars.InterCars(size).collect()
+        if resutls:
+            self.results.append(resutls)
 
-df = DataFrameAppend(results, columns = [
-    "size",
-    "pattern",
-    "seller",
-    "price",
-    "stock",
-    "dot",
-    "remarks",
-    "delivery",
-    "date",
-    "brand",
-    "type",
-    "season",
-    "DataSource",
-    ],
-                     )
+    def _collect_oponeo(self, size):
+        oponeo_results = oponeo.Oponeo(size).collect()
+        if oponeo_results:
+            self.results.append(oponeo_results)
 
-df["WebLink"] = ""
-df.append_to_excel(output_file, index=False)
+    def collect(self):
+        if "platformaopon" in self.sources:
+            platformaopon = PlatformaOpon(self.driver)
+        for size in self.sizes:
+            if "platformaopon" in self.sources:
+                platformaopon.size = size
+                self.results.extend(platformaopon.collect())
+            if size["type"] == "PCR" and "oponeo" in self.sources:
+                self._collect_oponeo(size)
+            if size["type"] == "PCR" and "sklepopon" in self.sources:
+                self._collect_sklepopon(size)
+            if size["type"] == "PCR" and "intercars" in self.sources:
+                self._collect_intercars(size)
+        if "platformaopon" in self.sources:
+            platformaopon.close()
+            self.driver.close()
+
+    def dump_data(self):
+        df = DataFrameAppend(self.results, columns = [
+            "size",
+            "pattern",
+            "seller",
+            "price",
+            "stock",
+            "dot",
+            "remarks",
+            "delivery",
+            "date",
+            "brand",
+            "type",
+            "season",
+            "DataSource",
+            ],
+                             )
+
+        df["WebLink"] = ""
+        df.append_to_excel(self.output_file, index=False)
+
+
+if __name__ == "__main__":
+    command_line_options = get_options(sys.argv[1:], USAGE)
+    price_scraper = PriceScraper(**command_line_options)
+    price_scraper.collect()
+    price_scraper.dump_data()
