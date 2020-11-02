@@ -1,5 +1,5 @@
 import unittest
-import platforma
+import modules.platforma
 from time import sleep
 from selenium import webdriver
 from selenium.webdriver.chrome.options import Options as ChromeOptions

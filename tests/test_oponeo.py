@@ -1,5 +1,5 @@
 import unittest
-import oponeo
+import modules.oponeo
 from time import sleep
 
 class TestOponeo(unittest.TestCase):

@@ -1,7 +1,7 @@
 import unittest
-import sklepopon
+import modules.intercars
 
-class TestSklepOpon(unittest.TestCase):
+class TestInterCars(unittest.TestCase):
     DEFAULT_SIZES = [
         {
             "brand": "Hankook",
@@ -49,13 +49,14 @@ class TestSklepOpon(unittest.TestCase):
     ]
 
     def setUp(self):
-        self.sizes = [sklepopon.SklepOpon(size) for size in self.DEFAULT_SIZES]
+        self.sizes = [intercars.InterCars(size) for size in self.DEFAULT_SIZES]
+        self.maxDiff = None
 
     def test_get_address(self):
-        address0 = "https://www.sklepopon.com/opony?strona=1&filtr[szerokosc]=195&filtr[profil]=65&filtr[srednica]=15&filtr[sezon]=2&filtr[producers]=38"
-        address1 = "https://www.sklepopon.com/opony?strona=1&filtr[szerokosc]=225&filtr[profil]=60&filtr[srednica]=17&filtr[si]=V&filtr[li]=99&filtr[sezon]=1&filtr[producers]=38"
-        address2 = "https://www.sklepopon.com/opony?strona=1&filtr[szerokosc]=225&filtr[profil]=65&filtr[srednica]=16&filtr[si]=R&filtr[li]=112%2F110&filtr[sezon]=2&filtr[producers]=266"
-        address3 = "https://www.sklepopon.com/opony?strona=1&filtr[szerokosc]=195&filtr[profil]=65&filtr[srednica]=15&filtr[si]=T&filtr[li]=91&filtr[sezon]=2&filtr[producers]=38"
+        address0 = "https://intercars.pl/szukaj/opony-201/?cf_szerokosc=195&cf_profil=65&cf_srednica=15%22&cf_producent=HANKOOK&cf_sezon=zimowa"
+        address1 = "https://intercars.pl/szukaj/opony-201/?cf_szerokosc=225&cf_profil=60&cf_srednica=17%22&cf_producent=HANKOOK&cf_sezon=letnia&cf_indeks-predkosci=V+-+240+km%2Fh&cf_indeks-nosnosci=99"
+        address2 = "https://intercars.pl/szukaj/opony-201/?cf_szerokosc=225&cf_profil=65&cf_srednica=16%22&cf_producent=LAUFENN&cf_sezon=zimowa&cf_indeks-predkosci=R+-+170+km%2Fh&cf_indeks-nosnosci=112%2F110"
+        address3 = "https://intercars.pl/szukaj/opony-201/?cf_szerokosc=195&cf_profil=65&cf_srednica=15%22&cf_producent=HANKOOK&cf_sezon=zimowa&cf_indeks-predkosci=T+-+190+km%2Fh&cf_indeks-nosnosci=91"
         self.assertEqual(self.sizes[0]._get_address(), address0)
         self.assertEqual(self.sizes[1]._get_address(), address1)
         self.assertEqual(self.sizes[2]._get_address(), address2)
@@ -72,7 +73,7 @@ class TestSklepOpon(unittest.TestCase):
         result0 = self.sizes[0].collect()
         self.assertIsNotNone(self.sizes[0].product)
         self.assertIn("195/65R15", result0[0])
-        self.assertEqual("SklepOpon", result0[2])
+        self.assertEqual("InterCars", result0[2])
 
         result1 = self.sizes[1].collect()
         self.assertEqual(type(result1[3]), float)
