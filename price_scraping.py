@@ -46,9 +46,10 @@ def get_options(arguments, usage):
         if option in ("-s", "--sources"):
             args["sources"] = argument.lower().split(",")
     if other_arguments:
-        for file in other_arguments:
-            if not(os.path.isfile(file)) or len(other_arguments) != 2:
-                sys.exit(f"Provide valid filenames \n\n{usage}")
+        if len(other_arguments) != 2:
+            sys.exit(f"Provide two filenames \n\n{usage}")
+        if not(os.path.isfile(other_arguments[0])):
+            sys.exit(f"Provide valid input filename \n\n{usage}")
         args["input_file"] = other_arguments[0]
         args["output_file"] = other_arguments[1]
     return args
