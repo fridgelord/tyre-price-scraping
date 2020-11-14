@@ -64,7 +64,7 @@ class Oponeo():
         if text == ask:
             return text
         pattern1 = "Ponad ([0-9]+) sztuk"
-        pattern2 = "Ostatnie ([0-9]+) sztuk"
+        pattern2 = "Ostatni. ([0-9]+) sztuk"
         try:
             stockmatch1= re.match(pattern1, text)
             stockmatch2= re.match(pattern2, text)
