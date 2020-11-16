@@ -17,7 +17,7 @@ class SklepOpon():
     SELLER = "SklepOpon"
 
     BUY_SITE = {
-        "width": "https://www.sklepopon.com/opony?strona=1&filtr[szerokosc]=",
+        "width": "https://www.sklepopon.com/szukaj-opony?strona=1&filtr[szerokosc]=",
         "season(zima,lato,wielosezon)": "&filtr[sezon]=",
         "brand": "&filtr[producers]=",
         "profile": "&filtr[profil]=",
