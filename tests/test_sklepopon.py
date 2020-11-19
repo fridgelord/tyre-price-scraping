@@ -1,5 +1,5 @@
 import unittest
-import modules.sklepopon
+from modules import sklepopon
 
 class TestSklepOpon(unittest.TestCase):
     DEFAULT_SIZES = [
@@ -52,10 +52,10 @@ class TestSklepOpon(unittest.TestCase):
         self.sizes = [sklepopon.SklepOpon(size) for size in self.DEFAULT_SIZES]
 
     def test_get_address(self):
-        address0 = "https://www.sklepopon.com/opony?strona=1&filtr[szerokosc]=195&filtr[profil]=65&filtr[srednica]=15&filtr[sezon]=2&filtr[producers]=38"
-        address1 = "https://www.sklepopon.com/opony?strona=1&filtr[szerokosc]=225&filtr[profil]=60&filtr[srednica]=17&filtr[si]=V&filtr[li]=99&filtr[sezon]=1&filtr[producers]=38"
-        address2 = "https://www.sklepopon.com/opony?strona=1&filtr[szerokosc]=225&filtr[profil]=65&filtr[srednica]=16&filtr[si]=R&filtr[li]=112%2F110&filtr[sezon]=2&filtr[producers]=266"
-        address3 = "https://www.sklepopon.com/opony?strona=1&filtr[szerokosc]=195&filtr[profil]=65&filtr[srednica]=15&filtr[si]=T&filtr[li]=91&filtr[sezon]=2&filtr[producers]=38"
+        address0 = "https://www.sklepopon.com/szukaj-opony?strona=1&filtr[szerokosc]=195&filtr[profil]=65&filtr[srednica]=15&filtr[sezon]=2&filtr[producers]=38"
+        address1 = "https://www.sklepopon.com/szukaj-opony?strona=1&filtr[szerokosc]=225&filtr[profil]=60&filtr[srednica]=17&filtr[si]=V&filtr[li]=99&filtr[sezon]=1&filtr[producers]=38"
+        address2 = "https://www.sklepopon.com/szukaj-opony?strona=1&filtr[szerokosc]=225&filtr[profil]=65&filtr[srednica]=16&filtr[si]=R&filtr[li]=112%2F110&filtr[sezon]=2&filtr[producers]=266"
+        address3 = "https://www.sklepopon.com/szukaj-opony?strona=1&filtr[szerokosc]=195&filtr[profil]=65&filtr[srednica]=15&filtr[si]=T&filtr[li]=91&filtr[sezon]=2&filtr[producers]=38"
         self.assertEqual(self.sizes[0]._get_address(), address0)
         self.assertEqual(self.sizes[1]._get_address(), address1)
         self.assertEqual(self.sizes[2]._get_address(), address2)

@@ -1,11 +1,11 @@
 import unittest
-import modules.platforma
+from modules import platforma
 from time import sleep
 from selenium import webdriver
 from selenium.webdriver.chrome.options import Options as ChromeOptions
 from datetime import datetime
 
-class TestOponeo(unittest.TestCase):
+class TestPlatforma(unittest.TestCase):
     DEFAULT_SIZES = [
         {
             "brand": "Hankook",

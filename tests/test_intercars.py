@@ -1,5 +1,5 @@
 import unittest
-import modules.intercars
+from modules import intercars
 
 class TestInterCars(unittest.TestCase):
     DEFAULT_SIZES = [
@@ -73,7 +73,7 @@ class TestInterCars(unittest.TestCase):
         result0 = self.sizes[0].collect()
         self.assertIsNotNone(self.sizes[0].product)
         self.assertIn("195/65R15", result0[0])
-        self.assertEqual("InterCars", result0[2])
+        self.assertEqual("InterCars B2C", result0[2])
 
         result1 = self.sizes[1].collect()
         self.assertEqual(type(result1[3]), float)
