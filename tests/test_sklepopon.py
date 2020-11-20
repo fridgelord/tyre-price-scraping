@@ -52,10 +52,10 @@ class TestSklepOpon(unittest.TestCase):
         self.sizes = [sklepopon.SklepOpon(size) for size in self.DEFAULT_SIZES]
 
     def test_get_address(self):
-        address0 = "https://www.sklepopon.com/szukaj-opony?strona=1&filtr[szerokosc]=195&filtr[profil]=65&filtr[srednica]=15&filtr[sezon]=2&filtr[producers]=38"
-        address1 = "https://www.sklepopon.com/szukaj-opony?strona=1&filtr[szerokosc]=225&filtr[profil]=60&filtr[srednica]=17&filtr[si]=V&filtr[li]=99&filtr[sezon]=1&filtr[producers]=38"
-        address2 = "https://www.sklepopon.com/szukaj-opony?strona=1&filtr[szerokosc]=225&filtr[profil]=65&filtr[srednica]=16&filtr[si]=R&filtr[li]=112%2F110&filtr[sezon]=2&filtr[producers]=266"
-        address3 = "https://www.sklepopon.com/szukaj-opony?strona=1&filtr[szerokosc]=195&filtr[profil]=65&filtr[srednica]=15&filtr[si]=T&filtr[li]=91&filtr[sezon]=2&filtr[producers]=38"
+        address0 = "https://www.sklepopon.com/szukaj-opony?rozmiar=195/65R15&sezon=zimowe&producent=Hankook"
+        address1 = "https://www.sklepopon.com/szukaj-opony?rozmiar=225/60R17&sezon=letnie&producent=Hankook&indeks-nosnosci=99.0&indeks-predkosci=V"
+        address2 = "https://www.sklepopon.com/szukaj-opony?rozmiar=225/65R16&sezon=zimowe&producent=Laufenn&indeks-nosnosci=112.0&indeks-predkosci=R"
+        address3 = "https://www.sklepopon.com/szukaj-opony?rozmiar=195/65R15&sezon=zimowe&producent=Hankook&indeks-nosnosci=91.0&indeks-predkosci=T"
         self.assertEqual(self.sizes[0]._get_address(), address0)
         self.assertEqual(self.sizes[1]._get_address(), address1)
         self.assertEqual(self.sizes[2]._get_address(), address2)
@@ -73,11 +73,9 @@ class TestSklepOpon(unittest.TestCase):
         self.assertIsNotNone(self.sizes[0].product)
         self.assertIn("195/65R15", result0[0])
         self.assertEqual("SklepOpon", result0[2])
-
         result1 = self.sizes[1].collect()
         self.assertEqual(type(result1[3]), float)
         self.assertGreater(result1[3], 0.0)
-
         result2 = self.sizes[2].collect()
         self.assertEqual("225/65R16 112/110R", result2[0])
 

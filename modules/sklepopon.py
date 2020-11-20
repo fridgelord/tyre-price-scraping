@@ -10,29 +10,25 @@ class SklepOpon():
 
     logger = logging.getLogger("SklepOpon")
 
-    PARAM_ORDER = ["width", "profile", "seat", "indeks predkosci", "indeks nosnosci"
-                     , "season(zima,lato,wielosezon)", "brand", ]
+    PARAM_ORDER = ["size", "season(zima,lato,wielosezon)", "brand",
+                    "indeks nosnosci" ,"indeks predkosci", ]
 
     SOURCE = "SklepOpon"
     SELLER = "SklepOpon"
 
     BUY_SITE = {
-        "width": "https://www.sklepopon.com/szukaj-opony?strona=1&filtr[szerokosc]=",
-        "season(zima,lato,wielosezon)": "&filtr[sezon]=",
-        "brand": "&filtr[producers]=",
-        "profile": "&filtr[profil]=",
-        "seat": "&filtr[srednica]=",
-        "indeks predkosci": "&filtr[si]=",
-        "indeks nosnosci": "&filtr[li]=",
+        "size": "https://www.sklepopon.com/szukaj-opony?rozmiar=",
+        "season(zima,lato,wielosezon)": "&sezon=",
+        "brand": "&producent=",
+        "indeks nosnosci": "&indeks-nosnosci=",
+        "indeks predkosci": "&indeks-predkosci=",
     }
 
 
     PARAMS = {
-        "lato": "1",
-        "zima": "2",
-        "wielosezon": "3",
-        "Hankook": "38",
-        "Laufenn": "266",
+        "lato": "letnie",
+        "zima": "zimowe",
+        "wielosezon": "całoroczne",
     }
 
     def __init__(self, size):
@@ -40,13 +36,10 @@ class SklepOpon():
         season_short = "season(zima,lato,wielosezon)"
         self.season_original = size[season_short]
         self.size[season_short] = self.PARAMS.get(self.size[season_short], self.size[season_short] )
-        self.size["brand"] = self.PARAMS.get(self.size["brand"], self.size["brand"] )
-        self.size["width"] = self.size["size"].split("/")[0]
-        self.size["profile"] = self.size["size"].split("/")[1].split("R")[0]
-        self.size["seat"] = self.size["size"].split("R")[1]
+        self.size["brand"] = self.size["brand"].capitalize()
         LI = "indeks nosnosci"
         if LI in self.size:
-            self.size[LI] = self.size[LI].replace("/", "%2F")
+            self.size[LI] = self.size[LI].split("/")[0] + ".0"
 
     def _parameter_given(self, parameter):
         return parameter in self.size
@@ -70,33 +63,33 @@ class SklepOpon():
 
     def collect(self):
         soup = self._get_soup()
-        self.product = soup.find(True, {'class': 'listingContainer'})
+        self.product = soup.find(True, {"data-c-name": "listing-products-element"})
         if not self.product:
             self.logger.error(f"product size {self.size['size']}, brand {self.size['brand']}: not found")
             return []
         try:
             # obligatory results
-            pattern = self.product.find("span", "bierznik").text #sic!
-            brand = self.product.find("span", "producent").text
-            dim = self.product.find("span", "rozmiar").text
+            brand = self.product.find("span", "text-p6d xl:text-p4d flex items-center font-bold").text.strip()
+            description = self.product.find("span", "font-normal text-p4d").text.strip()
             try:
-                dim_l = dim.split()
-                dimension = dim_l[0] + dim_l[1] + " " + dim_l[2] + dim_l[3]
+                dim_l = description.split()
+                dimension = dim_l[-3] + dim_l[-2] + " " + dim_l[-1]
+                pattern = " ".join(dim_l[:-3])
             except IndexError:
-                dimension = dim
-            price_box = self.product.find("p", "prd_priceBox").text
-            price = round(float(price_box.split()[0]) / 1.23, 2)
+                dimension = description
+                pattern = ""
+            price_1 = self.product.find("span", "text-p1d").text
+            price_2 = self.product.find("span", "text-p3d pr-2").text
+            price = "".join((price_1, price_2)).replace(",", ".")
+            price = round(float(price.split()[0]) / 1.23, 2)
         except Exception:
             self.logger.exception(f"problem in size {self.size['size']}, brand {self.size['brand']}")
             return []
         try:
-            dot = "DOT " + self.product.find("span", "prd_prod_date").find("span", "data").text
+            dot = "DOT " + self.product.find("p", "prd_prod_date").text
         except AttributeError:
             dot = ""
-        try:
-            remarks = self.product.find("span", "prd_prod_date").find("span", "custom_msg").text
-        except AttributeError:
-            remarks = ""
+        remarks = ""
         stock = "40"
         delivery = ""
 
