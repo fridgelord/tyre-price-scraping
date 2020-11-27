@@ -73,8 +73,8 @@ class SklepOpon():
             description = self.product.find("span", "font-normal text-p4d").text.strip()
             try:
                 dim_l = description.split()
-                dimension = dim_l[-3] + dim_l[-2] + " " + dim_l[-1]
-                pattern = " ".join(dim_l[:-3])
+                dimension = dim_l[-4] + dim_l[-3] + " " + dim_l[-2] + dim_l[-1]
+                pattern = " ".join(dim_l[:-4])
             except IndexError:
                 dimension = description
                 pattern = ""
