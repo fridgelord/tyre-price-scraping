@@ -1,9 +1,9 @@
 import platform
-from modules.DataFrameAppend import *
-from modules.platforma import PlatformaOpon
-import modules.oponeo as oponeo
-import modules.sklepopon as sklepopon
-import modules.intercars as intercars
+from .DataFrameAppend import *
+from .platforma import PlatformaOpon
+from . import oponeo
+from . import sklepopon
+from . import intercars
 from selenium import webdriver
 from selenium.webdriver.firefox.options import Options as FirefoxOptions
 from selenium.webdriver.chrome.options import Options as ChromeOptions
