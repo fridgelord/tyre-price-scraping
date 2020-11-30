@@ -171,7 +171,7 @@ class PriceScraper():
         df.append_to_excel(self.output_file, index=False)
 
 
-def main()
+def main():
     command_line_options = get_options(sys.argv[1:], USAGE)
     price_scraper = PriceScraper(**command_line_options)
     price_scraper.collect()
