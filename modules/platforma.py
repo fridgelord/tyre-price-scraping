@@ -123,7 +123,7 @@ class PlatformaOpon:
         brand = offer.find_element_by_xpath(".//span[contains(@class, 'producer-name')]").text
         stock = offer.find_element_by_xpath(".//span[contains(@class, 'value')]").text
         price_str = offer.find_element_by_xpath(".//div[contains(@class, 'big-price')]").text
-        price = float(price_str.replace(" zł", "").replace(",","."))
+        price = float("".join(price_str.replace(" zł", "").replace(",",".")))
         try:
             seller = offer.find_element_by_xpath(".//img[contains(@class, 'company-logo')]").get_attribute("title")
         except NoSuchElementException:
