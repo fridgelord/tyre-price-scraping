@@ -5,11 +5,11 @@ import sys
 from selenium.common.exceptions import TimeoutException
 from datetime import date
 
+
 class PlatformaOpon:
 
     SOURCE = "PlatformaOpon"
     LOGIN_SITE = "https://platformaopon.pl/login"
-    CREDENTIALS_FILE = os.path.join(sys.path[0], "credentials.txt")
     PARAMS_BRAND = {
         "hankook": "52",
         "laufenn": "18945",
@@ -50,17 +50,15 @@ class PlatformaOpon:
                    "indeks nosnosci", "indeks predkosci", "bieznik(nieobowiazkowy)",
                    "min. sztuk", ]
 
-    def __init__(self, driver):
-        with open(self.CREDENTIALS_FILE) as fp:
-            credentials = fp.read().splitlines()
+    def __init__(self, driver, login, password):
         self.driver = driver
         self.driver.get(self.LOGIN_SITE)
         username_field = self.driver.find_element_by_xpath("//input[contains(@id, 'username')]")
         password_field = self.driver.find_element_by_xpath("//input[contains(@id, 'password')]")
         save_me_tick = self.driver.find_element_by_xpath("//span[contains(@class, 'tick halflings')]")
         submit_field = self.driver.find_element_by_xpath("//input[contains(@id, 'submit')]")
-        username_field.send_keys(credentials[0])
-        password_field.send_keys(credentials[1])
+        username_field.send_keys(login)
+        password_field.send_keys(password)
         save_me_tick.click()
         try:
             submit_field.click()
