@@ -4,6 +4,7 @@ from .platforma import PlatformaOpon
 from . import oponeo
 from . import sklepopon
 from . import intercars
+from ..data.input.credentials import *
 from selenium import webdriver
 from selenium.webdriver.firefox.options import Options as FirefoxOptions
 from selenium.webdriver.chrome.options import Options as ChromeOptions
@@ -134,7 +135,7 @@ class PriceScraper():
 
     def collect(self):
         if "platformaopon" in self.sources:
-            platformaopon = PlatformaOpon(self.driver)
+            platformaopon = PlatformaOpon(self.driver, platforma_login, platforma_password)
         for size in self.sizes:
             if "platformaopon" in self.sources:
                 platformaopon.size = size

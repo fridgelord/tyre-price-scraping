@@ -5,6 +5,8 @@ from selenium import webdriver
 from selenium.webdriver.chrome.options import Options as ChromeOptions
 from datetime import datetime
 
+from data.input.credentials import *
+
 class TestPlatforma(unittest.TestCase):
     DEFAULT_SIZES = [
         {
@@ -64,7 +66,7 @@ class TestPlatforma(unittest.TestCase):
         options = ChromeOptions()
         options.add_argument("--window-size=1920,1080")
         self.driver = webdriver.Chrome(options=options)
-        self.platforma_opon = platforma.PlatformaOpon(self.driver)
+        self.platforma_opon = platforma.PlatformaOpon(self.driver, platforma_login, platforma_password)
 
     def tearDown(self):
         self.platforma_opon.close()
