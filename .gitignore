@@ -9,3 +9,4 @@ chrome
 .~lock.sizes.xlsx#
 chrome
 data/input/credentials.py
+modules/credentials.py
