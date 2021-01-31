@@ -136,19 +136,19 @@ class PriceScraper():
     def collect(self):
         if "platformaopon" in self.sources:
             platformaopon = PlatformaOpon(self.driver, credentials.login, credentials.password)
-        for size in self.sizes:
+            for size in self.sizes:
+                if "platformaopon" in self.sources:
+                    platformaopon.size = size
+                    self.results.extend(platformaopon.collect())
+                if size["type"] == "PCR" and "oponeo" in self.sources:
+                    self._collect_oponeo(size)
+                if size["type"] == "PCR" and "sklepopon" in self.sources:
+                    self._collect_sklepopon(size)
+                if size["type"] == "PCR" and "intercars" in self.sources:
+                    self._collect_intercars(size)
             if "platformaopon" in self.sources:
-                platformaopon.size = size
-                self.results.extend(platformaopon.collect())
-            if size["type"] == "PCR" and "oponeo" in self.sources:
-                self._collect_oponeo(size)
-            if size["type"] == "PCR" and "sklepopon" in self.sources:
-                self._collect_sklepopon(size)
-            if size["type"] == "PCR" and "intercars" in self.sources:
-                self._collect_intercars(size)
-        if "platformaopon" in self.sources:
-            platformaopon.close()
-            self.driver.close()
+                platformaopon.close()
+                self.driver.close()
 
     def dump_data(self):
         df = DataFrameAppend(self.results, columns = [
