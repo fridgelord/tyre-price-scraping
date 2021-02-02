@@ -10,7 +10,7 @@ from data.input.credentials import *
 class TestPlatforma(unittest.TestCase):
     DEFAULT_SIZES = [
         {
-            "brand": "Hankook",
+            "brand": "Pirelli",
             "size": "195/65R15",
             "season(zima,lato,wielosezon)": "zima",
             "type": "PCR",
@@ -74,7 +74,7 @@ class TestPlatforma(unittest.TestCase):
 
     def test_get_address(self):
         addresses = (
-            "https://platformaopon.pl/buy/offers?SaleOfferTyreFilterForm%5Bsale_offer%5D%5Bproducer%5D%5BpersonalizedProducersList%5D=52&SaleOfferTyreFilterForm%5BtyreParameters%5D%5Bsize%5D=195%2F65R15&SaleOfferTyreFilterForm%5BtyreParameters%5D%5Bseason%5D=2&SaleOfferTyreFilterForm%5BisDemo%5D=0&SaleOfferTyreFilterForm%5BisRetreaded%5D=0&SaleOfferTyreFilterForm%5Bsearch%5D=",
+            "https://platformaopon.pl/buy/offers?SaleOfferTyreFilterForm%5Bsale_offer%5D%5Bproducer%5D%5BpersonalizedProducersList%5D=13&SaleOfferTyreFilterForm%5BtyreParameters%5D%5Bsize%5D=195%2F65R15&SaleOfferTyreFilterForm%5BtyreParameters%5D%5Bseason%5D=2&SaleOfferTyreFilterForm%5BisDemo%5D=0&SaleOfferTyreFilterForm%5BisRetreaded%5D=0&SaleOfferTyreFilterForm%5Bsearch%5D=",
             "https://platformaopon.pl/buy/offers?SaleOfferTyreFilterForm%5Bsale_offer%5D%5Bproducer%5D%5BpersonalizedProducersList%5D=52&SaleOfferTyreFilterForm%5BtyreParameters%5D%5Bsize%5D=225%2F60R17&SaleOfferTyreFilterForm%5BtyreParameters%5D%5Bseason%5D=1&SaleOfferTyreFilterForm%5BtyreParameters%5D%5Bcapacity%5D=99&SaleOfferTyreFilterForm%5BtyreParameters%5D%5Bspeed%5D=27&SaleOfferTyreFilterForm%5Bsale_offer%5D%5Bname%5D=K125&SaleOfferTyreFilterForm%5Bsale_offer%5D%5Bamount%5D%5Bmin%5D=20&SaleOfferTyreFilterForm%5BisDemo%5D=0&SaleOfferTyreFilterForm%5BisRetreaded%5D=0&SaleOfferTyreFilterForm%5Bsearch%5D=",
             "https://platformaopon.pl/buy/offers?SaleOfferTyreFilterForm%5Bsale_offer%5D%5Bproducer%5D%5BpersonalizedProducersList%5D=18945&SaleOfferTyreFilterForm%5BtyreParameters%5D%5Bsize%5D=225%2F65R16&SaleOfferTyreFilterForm%5BtyreParameters%5D%5Bseason%5D=2&SaleOfferTyreFilterForm%5BtyreParameters%5D%5Bcapacity%5D=112/110&SaleOfferTyreFilterForm%5BtyreParameters%5D%5Bspeed%5D=22&SaleOfferTyreFilterForm%5Bsale_offer%5D%5Bname%5D=LY31&SaleOfferTyreFilterForm%5Bsale_offer%5D%5Bamount%5D%5Bmin%5D=20&SaleOfferTyreFilterForm%5BisDemo%5D=0&SaleOfferTyreFilterForm%5BisRetreaded%5D=0&SaleOfferTyreFilterForm%5Bsearch%5D=",
             "https://platformaopon.pl/buy/offers?SaleOfferTyreFilterForm%5Bsale_offer%5D%5Bproducer%5D%5BpersonalizedProducersList%5D=52&SaleOfferTyreFilterForm%5BtyreParameters%5D%5Bsize%5D=195%2F65R15&SaleOfferTyreFilterForm%5BtyreParameters%5D%5Bseason%5D=2&SaleOfferTyreFilterForm%5BtyreParameters%5D%5Bcapacity%5D=91&SaleOfferTyreFilterForm%5BtyreParameters%5D%5Bspeed%5D=24&SaleOfferTyreFilterForm%5Bsale_offer%5D%5Bname%5D=W452&SaleOfferTyreFilterForm%5Bsale_offer%5D%5Bamount%5D%5Bmin%5D=20&SaleOfferTyreFilterForm%5BisDemo%5D=0&SaleOfferTyreFilterForm%5BisRetreaded%5D=0&SaleOfferTyreFilterForm%5Bsearch%5D=",
@@ -87,6 +87,7 @@ class TestPlatforma(unittest.TestCase):
         self.platforma_opon.size = self.DEFAULT_SIZES[0]
         result0 = self.platforma_opon.collect()
         self.assertIn("195/65R15", result0[0][0])
+        self.assertIn("Pirelli", result0[3][9])
         self.assertIn("195/65R15", result0[9][0])
 
         self.platforma_opon.size = self.DEFAULT_SIZES[1]
